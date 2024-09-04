@@ -43,6 +43,9 @@ namespace Friflo.Engine.Unity {
                     if (type.IsGenericType) {
                         continue;
                     }
+                    if (type.IsAbstract) {
+                        continue;
+                    }
                     if (!type.IsSubclassOf(typeof(BaseSystem))) {
                         continue;
                     }
