@@ -16,14 +16,10 @@
         "ecs",
         "entity-component-system"
     ],
-    "author": {
-        "name": "Ullrich Praetz",
-        "url": "https://github.com/friflo"
-    },
     "samples": [
         {
-            "displayName": "System Examples",
-            "description": "Common System Examples",
+            "displayName": "ECS Examples",
+            "description": "Contains common ECS example systems",
             "path": "Samples~/Example"
         }
     ]
