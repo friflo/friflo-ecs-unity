@@ -1,6 +1,11 @@
 # friflo ECS for Unity
 
-PoC to integrate **friflo ECS extension** for Unity with Unity Package Manager.
+PoC to add **friflo ECS** as Unity extension with full Editor integration.
+
+
+# Setup
+
+Add **friflo ECS** Unity extension package with Unity Package Manager.
 
 1. Open **Unity > Window > Package Manager**
 2. Click the ➕ button > **Add package from git URL ...**
@@ -11,7 +16,7 @@ PoC to integrate **friflo ECS extension** for Unity with Unity Package Manager.
 
 
 
-## Recommendations
+## Tips
 
 ### Speedup Workflow
 
