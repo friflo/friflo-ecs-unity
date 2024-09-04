@@ -1,0 +1,23 @@
+{
+    "name": "friflo.friflo-ecs-unity",
+    "version": "1.0.0",
+    "displayName": "friflo ECS - Unity",
+    "description": "friflo ECS - Extension for Unity",
+    "unity": "2022.3",
+    "documentationUrl": "https://github.com/friflo/friflo-ecs-unity",
+    "licensesUrl": "https://github.com/friflo/friflo-ecs-unity/blob/main/LICENSE",
+    "dependencies": { },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/friflo/friflo-ecs-unity.git"
+    },
+    "keywords": [
+        "friflo",
+        "ecs",
+        "entity-component-system"
+    ],
+    "author": {
+        "name": "Ullrich Praetz",
+        "url": "https://github.com/friflo"
+    }
+}
