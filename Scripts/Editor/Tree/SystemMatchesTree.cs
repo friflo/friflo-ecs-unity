@@ -186,5 +186,18 @@ namespace Friflo.Engine.UnityEditor
             }
         }
         #endregion
+        
+    #region mouse event
+        protected override void DoubleClickedItem(int id)
+        {
+            var selectedRow = (SystemRow)FindItem(id, rootItem);
+            var systemSet   = selectedRow.systemSet;
+            if (systemSet == null) {
+                return;
+            }
+            systemSet.treeViewFocusId   = selectedRow.system.Id;
+            Selection.activeGameObject  = systemSet.gameObject;
+        }
+        #endregion
     }
 }

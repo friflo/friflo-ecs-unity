@@ -338,6 +338,17 @@ namespace Friflo.Engine.UnityEditor
         }
         #endregion
         
+    #region mouse event
+        protected override void DoubleClickedItem(int id)
+        {
+            var selectedRow = (SystemRow)FindItem(id, rootItem);
+            var system = selectedRow.system; 
+            if (system != null && system is not SystemGroup) {
+                ExternalEditor.OpenFileWithType(selectedRow.system.GetType());
+            }
+        }
+        #endregion
+        
     #region drag & drop
         private readonly List<BaseSystem> dragSources = new List<BaseSystem>();
         
