@@ -19,5 +19,12 @@
     "author": {
         "name": "Ullrich Praetz",
         "url": "https://github.com/friflo"
-    }
+    },
+    "samples": [
+        {
+            "displayName": "System Examples",
+            "description": "Common System Examples",
+            "path": "Samples~/Example"
+        }
+    ]
 }
