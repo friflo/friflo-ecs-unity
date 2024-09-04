@@ -8,3 +8,15 @@ PoC to integrate **friflo ECS extension** for Unity with Unity Package Manager.
    ```
    https://github.com/friflo/friflo-ecs-unity.git
    ```
+
+
+
+## Recommendations
+
+### Speedup Workflow
+
+Disable Reload Domain at **Edit > Project Settings ... > Editor**
+```
+Enter Play Mode Options [x]
+  Reload Domain         [ ]
+```
