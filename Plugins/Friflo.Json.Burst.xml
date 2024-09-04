@@ -1,0 +1,524 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Friflo.Json.Burst</name>
+    </assembly>
+    <members>
+        <member name="M:Friflo.Json.Burst.Bytes.InitBytes(System.Int32)">
+            called previously <see cref="T:Friflo.Json.Burst.Utils.ByteList"/> constructor
+        </member>
+        <member name="M:Friflo.Json.Burst.Bytes.Dispose">
+            <summary>
+            Dispose all internal used arrays.
+            Only required when running with JSON_BURST within Unity.
+            was previous in <see cref="M:Friflo.Json.Burst.Utils.ByteList.Dispose"/>
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Bytes.Dispose(Friflo.Json.Burst.Untracked)">
+            was previous in <see cref="M:Friflo.Json.Burst.Utils.ByteList.Dispose(Friflo.Json.Burst.Untracked)"/>
+        </member>
+        <member name="M:Friflo.Json.Burst.Bytes.#ctor(System.Int32)">
+            called previously <see cref="T:Friflo.Json.Burst.Utils.ByteList"/> constructor
+        </member>
+        <member name="M:Friflo.Json.Burst.Bytes.#ctor(System.String)">
+            called previously <see cref="T:Friflo.Json.Burst.Utils.ByteList"/> constructor
+        </member>
+        <member name="M:Friflo.Json.Burst.Bytes.#ctor(System.String,Friflo.Json.Burst.Untracked)">
+            <summary> <see cref="M:Friflo.Json.Burst.Utils.Bytes32.FromBytes(Friflo.Json.Burst.Bytes@,Friflo.Json.Burst.Untracked)"/> expect capacity + 32</summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Bytes.AllocateBuffer(System.Int32)">
+            was previous in <see cref="T:Friflo.Json.Burst.Utils.ByteList"/> constructor
+        </member>
+        <member name="M:Friflo.Json.Burst.Bytes.Resize(System.Int32)">
+            was previous in <see cref="M:Friflo.Json.Burst.Utils.ByteList.Resize(System.Int32)"/>
+        </member>
+        <member name="F:Friflo.Json.Burst.Bytes.DateTimeFormat">
+            <summary>
+            JSON DateTime are serialized as ISO 8601 UTC - suffix Z for Zulu. E.g<br/>
+            <c>2023-07-09T09:27:24Z</c><br/>
+            <c>2023-07-09T09:27:24.1Z</c><br/>
+            <c>2023-07-09T09:27:24.123456Z</c><br/>
+            See: https://en.wikipedia.org/wiki/ISO_8601
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Bytes.IsEqualArray(System.Byte[])">
+            <summary>deprecated: Use <see cref="T:Friflo.Json.Burst.Utf8String"/> instead </summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Bytes.ToString">
+            Note: Use <see cref="M:Friflo.Json.Burst.Bytes.AsString"/> instead to simplify code navigation
+        </member>
+        <member name="M:Friflo.Json.Burst.Bytes.ToString(System.Byte[],System.Int32,System.Int32)">
+            Must not by called from Burst. Burst cant handle managed types
+        </member>
+        <member name="F:Friflo.Json.Burst.Bytes.CopyRemainder">
+            <summary>
+            <b>Obsolete</b> - as <see cref="M:Friflo.Json.Burst.Bytes.AppendBytesOld(Friflo.Json.Burst.Bytes@)"/> is obsolete
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Bytes.AppendBytesOld(Friflo.Json.Burst.Bytes@)">
+            <summary>
+            <b>Obsolete</b> - use <see cref="M:Friflo.Json.Burst.Bytes.AppendBytesSpan(System.ReadOnlySpan{System.Byte}@)"/><br/>
+            Method not removed to remember crazy pointer arithmetic
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Bytes.GetCharSpan(System.Int32,System.Int32)">
+            <summary>counter part of <see cref="M:Friflo.Json.Burst.Bytes.WriteCharArray(System.Int32,System.ReadOnlySpan{System.Char})"/></summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.JsonError.GetMessageBody">
+            <summary>Get error message including its position</summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.JsonError.GetMessage">
+            <summary>Get error message without its position</summary>
+        </member>
+        <member name="T:Friflo.Json.Burst.JsonEvent">
+            <summary>
+            The set of all JSON events returned by <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/> while iterating a JSON document.
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Burst.JsonEvent.ValueString">
+            <summary>
+            Found an object member { "name": "John" } with a string value in case the previous event was <see cref="F:Friflo.Json.Burst.JsonEvent.ObjectStart"/>
+            or an array element ["John"] in case the previous event was <see cref="F:Friflo.Json.Burst.JsonEvent.ArrayStart"/>.<br/>
+            The value is available via <see cref="F:Friflo.Json.Burst.Utf8JsonParser.value"/>.
+            To get its common .NET representation as a <see cref="T:System.String"/> use <see cref="M:Friflo.Json.Burst.Bytes.ToString"/><br/>  
+            In case of an object member <see cref="F:Friflo.Json.Burst.Utf8JsonParser.key"/> is set.  
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Burst.JsonEvent.ValueNumber">
+             <summary>
+             Found an object member { "count": 11 } with a number value in case the previous event was <see cref="F:Friflo.Json.Burst.JsonEvent.ObjectStart"/>
+             or an array element [11] in case the previous event was <see cref="F:Friflo.Json.Burst.JsonEvent.ArrayStart"/>.<br/>
+             In case of an object member <see cref="F:Friflo.Json.Burst.Utf8JsonParser.key"/> is set.<br/>
+            
+             The value is available via <see cref="F:Friflo.Json.Burst.Utf8JsonParser.value"/>.<br/>
+             If the number is floating point number <see cref="F:Friflo.Json.Burst.Utf8JsonParser.isFloat"/> is set. Otherwise the value is an integer.<br/>
+             To get the value as <see cref="T:System.Double"/> or <see cref="T:System.Single"/> use <see cref="M:Friflo.Json.Burst.Utf8JsonParser.ValueAsDouble(System.Boolean@)"/> or <see cref="M:Friflo.Json.Burst.Utf8JsonParser.ValueAsFloat(System.Boolean@)"/><br/>
+             To get the value as long or int use <see cref="M:Friflo.Json.Burst.Utf8JsonParser.ValueAsLong(System.Boolean@)"/> or <see cref="M:Friflo.Json.Burst.Utf8JsonParser.ValueAsInt(System.Boolean@)"/>
+             </summary>
+        </member>
+        <member name="F:Friflo.Json.Burst.JsonEvent.ValueBool">
+            <summary>
+            Found an object member { "isAlive": true } with a boolean value in case the previous event was <see cref="F:Friflo.Json.Burst.JsonEvent.ObjectStart"/>
+            or an array element [true] in case the previous event was <see cref="F:Friflo.Json.Burst.JsonEvent.ArrayStart"/>.<br/>
+            The value is available via <see cref="F:Friflo.Json.Burst.Utf8JsonParser.boolValue"/>.<br/>
+            In case of an object member <see cref="F:Friflo.Json.Burst.Utf8JsonParser.key"/> is set.
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Burst.JsonEvent.ArrayStart">
+            <summary>
+            Found an object member "employee": [ ... ] with an array in case the previous event was <see cref="F:Friflo.Json.Burst.JsonEvent.ObjectStart"/>
+            or an array element [ [...] ] in case the previous event was <see cref="F:Friflo.Json.Burst.JsonEvent.ArrayStart"/>.<br/>
+            Additional data is not available for this event. To access embedded array elements use <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/><br/>
+            In case of an object member <see cref="F:Friflo.Json.Burst.Utf8JsonParser.key"/> is set.
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Burst.JsonEvent.ObjectStart">
+            <summary>
+            Found an object member "employee": { ... } with an object in case the previous event was <see cref="F:Friflo.Json.Burst.JsonEvent.ObjectStart"/>
+            or an array element [{ ... }] in case the previous event was <see cref="F:Friflo.Json.Burst.JsonEvent.ArrayStart"/>.<br/>
+            Additional data is not available for this event. To access embedded object members use <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/><br/>
+            In case of an object member <see cref="F:Friflo.Json.Burst.Utf8JsonParser.key"/> is set.
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Burst.JsonEvent.ValueNull">
+            <summary>
+            Found an object member { "spouse": null } with a null value in case the previous event was <see cref="F:Friflo.Json.Burst.JsonEvent.ObjectStart"/>
+            or an array element [null] in case the previous event was <see cref="F:Friflo.Json.Burst.JsonEvent.ArrayStart"/>.<br/>
+            Additional data is not available as the only value is null.<br/>
+            In case of an object member <see cref="F:Friflo.Json.Burst.Utf8JsonParser.key"/> is set.
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Burst.JsonEvent.ObjectEnd">
+            <summary>
+            Found the end of an JSON object previously started with <see cref="F:Friflo.Json.Burst.JsonEvent.ObjectStart"/><br/>
+            Additional data is not available for this event. To access embedded object members use <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/><br/>
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Burst.JsonEvent.ArrayEnd">
+            Found the end of an JSON array previously started with <see cref="F:Friflo.Json.Burst.JsonEvent.ArrayStart"/><br/>
+            Additional data is not available for this event. To access embedded object members use <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/><br/>
+        </member>
+        <member name="F:Friflo.Json.Burst.JsonEvent.EOF">
+            <summary>
+            After iteration of a valid JSON document <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/> returns <see cref="F:Friflo.Json.Burst.JsonEvent.EOF"/>
+            when reaching the end of the given payload.
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Burst.JsonEvent.Error">
+            <summary>
+            Notify a JSON error while parsing.<br/>
+            Calling <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/> after <see cref="F:Friflo.Json.Burst.JsonEvent.EOF"/> returned once it always returns <see cref="F:Friflo.Json.Burst.JsonEvent.Error"/>
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Burst.Utf8JsonParser">
+             <summary>
+             The basic JSON Parser API required to parse a JSON document.
+            
+             The parser has a forward iterator interface returning a <see cref="T:Friflo.Json.Burst.JsonEvent"/> for each call to <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/>.
+             To start parsing a JSON document the parser need to be initialized with <see cref="M:Friflo.Json.Burst.Utf8JsonParser.InitParser(Friflo.Json.Burst.Bytes)"/>
+             From this point <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/> can be used.
+             Depending on the returned event additional fields contain the data captured by the event.
+             
+             After a JSON document was iterated successfully an additional call to <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/> returns <see cref="F:Friflo.Json.Burst.JsonEvent.EOF"/>
+             In case of an invalid JSON document <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/> returns <see cref="F:Friflo.Json.Burst.JsonEvent.Error"/>.
+             At this point any subsequent call to <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/> will return the same error.
+            
+             To maximize performance the <see cref="T:Friflo.Json.Burst.Utf8JsonParser"/> instance should be reused. This avoids unnecessary allocations on the heap.
+             </summary>
+        </member>
+        <member name="P:Friflo.Json.Burst.Utf8JsonParser.Event">
+            <summary>
+            Contains the <see cref="T:Friflo.Json.Burst.JsonEvent"/> set by the last call to <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/>,
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Burst.Utf8JsonParser.boolValue">
+            <summary>Contains the boolean value of an object member or an array element after <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/>
+            returned <see cref="F:Friflo.Json.Burst.JsonEvent.ValueBool"/></summary>
+        </member>
+        <member name="F:Friflo.Json.Burst.Utf8JsonParser.key">
+            <summary>Contains the key on an object member after <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/> returned one of the
+            <see cref="T:Friflo.Json.Burst.JsonEvent"/>'s starting with Value... and the previous event was <see cref="F:Friflo.Json.Burst.JsonEvent.ObjectStart"/>
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Burst.Utf8JsonParser.value">
+            <summary>Contains the (string) value of an object member or an array element after <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/>
+            returned <see cref="F:Friflo.Json.Burst.JsonEvent.ValueString"/></summary>
+        </member>
+        <member name="F:Friflo.Json.Burst.Utf8JsonParser.isFloat">
+            <summary>In case the event returned by <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/> was <see cref="F:Friflo.Json.Burst.JsonEvent.ValueNumber"/> the flag
+            indicates that the value of an object member or array element is a floating point number (e.g. 2.34).<br/>
+            Otherwise false indicates that the value is of an integral type (e.g. 11) 
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Burst.Utf8JsonParser.skipInfo">
+            <summary>Contains number of skipped JSON nodes when using one of the Skip...() methods like <see cref="M:Friflo.Json.Burst.Utf8JsonParser.SkipTree"/> while parsing</summary>
+        </member>
+        <member name="P:Friflo.Json.Burst.Utf8JsonParser.Level">
+            <summary>Returns the current depth inside the JSON document while parsing</summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonParser.ErrorMsg(System.String@,System.String@)">
+            <summary>
+            Set the parser to error state.<br/>
+            Subsequent calls to <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/> will return <see cref="F:Friflo.Json.Burst.JsonEvent.Error"/> 
+            </summary>
+            <param name="module">Name of the module raising the error</param>
+            <param name="msg">The message info of the error. Should be a sting literal to enable searching it the the source code</param>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonParser.GetPath">
+            <summary>
+            Returns the current JSON path while iterating as a <see cref="T:System.String"/>.  E.g. "map.key1"
+            </summary>
+            <returns>The current JSON path</returns>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonParser.ToString">
+            <summary>
+            Returns the current JSON path and position while iterating as a <see cref="T:System.String"/>.<br/>
+            E.g. { path: "map.key1", pos: 20 }<br/>
+            This method is intended only for debugging purposes.
+            </summary>
+            <returns>The current JSON path and position</returns>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonParser.AppendPath(Friflo.Json.Burst.Bytes@)">
+            <summary>
+            Add the current JSON path to the given <paramref name="str"/> buffer. E.g. "map.key1"
+            </summary>
+            <param name="str">The destination the current JSON path is added to</param>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonParser.Dispose">
+            <summary>
+            Dispose all internal used arrays.
+            Only required when running with JSON_BURST within Unity. 
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent">
+             <summary>
+             Used to iterate a JSON document.<br/>
+            
+             See <see cref="T:Friflo.Json.Burst.JsonEvent"/> for all possible events.
+             Depending on the returned event additional fields or methods are valid for access. E.g.<br/>
+             <see cref="F:Friflo.Json.Burst.Utf8JsonParser.key"/>, <see cref="F:Friflo.Json.Burst.Utf8JsonParser.value"/>, <see cref="F:Friflo.Json.Burst.Utf8JsonParser.boolValue"/>, <see cref="F:Friflo.Json.Burst.Utf8JsonParser.isFloat"/>,
+             <see cref="M:Friflo.Json.Burst.Utf8JsonParser.ValueAsInt(System.Boolean@)"/>, <see cref="M:Friflo.Json.Burst.Utf8JsonParser.ValueAsFloat(System.Boolean@)"/> and <see cref="M:Friflo.Json.Burst.Utf8JsonParser.ValueAsDouble(System.Boolean@)"/><br/> 
+             Before starting iteration the parser need to be initialized with <see cref="M:Friflo.Json.Burst.Utf8JsonParser.InitParser(Friflo.Json.Burst.Bytes)"/>
+             </summary>
+             <returns>Returns successively all <see cref="T:Friflo.Json.Burst.JsonEvent"/>'s while iterating a JSON document.<br/>
+             After full iteration of a JSON document an additional call to <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/>
+             returns <see cref="F:Friflo.Json.Burst.JsonEvent.EOF"/></returns>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonParser.SkipTree">
+            <summary>
+            Skip parsing a complete JSON node which can be object member, an array element or a value on root.<br/>
+            While skipping a tree of nodes inside a JSON document all counts inside <see cref="F:Friflo.Json.Burst.Utf8JsonParser.skipInfo"/> are incremented. 
+            </summary>
+            <returns>Returns true if skipping was successful</returns>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonParser.SkipEvent">
+            <summary>
+            Skip parsing a complete JSON node which can be object member, an array element or a value on root
+            with an already consumed <see cref="T:Friflo.Json.Burst.JsonEvent"/><br/>
+            In case of a (primitive) Value... event of <see cref="T:Friflo.Json.Burst.JsonEvent"/> it only increments the
+            related <see cref="F:Friflo.Json.Burst.Utf8JsonParser.skipInfo"/> count.<br/>
+            In case of <see cref="F:Friflo.Json.Burst.JsonEvent.ObjectStart"/> or <see cref="F:Friflo.Json.Burst.JsonEvent.ArrayStart"/> it skips the
+            whole JSON tree while incrementing the counts of <see cref="F:Friflo.Json.Burst.Utf8JsonParser.skipInfo"/> of all iterated JSON nodes. 
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonParser.ValueAsDoubleStd(System.Boolean@)">
+            <summary>
+            Returns the <see cref="T:System.Double"/> value of an object member or an array element after <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/>
+            returned <see cref="F:Friflo.Json.Burst.JsonEvent.ValueNumber"/> and <see cref="F:Friflo.Json.Burst.Utf8JsonParser.isFloat"/> is true
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonParser.ValueAsFloatStd(System.Boolean@)">
+            <summary>
+            Returns the <see cref="T:System.Single"/> value of an object member or an array element after <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/>
+            returned <see cref="F:Friflo.Json.Burst.JsonEvent.ValueNumber"/> and <see cref="F:Friflo.Json.Burst.Utf8JsonParser.isFloat"/> is true
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonParser.ValueAsDouble(System.Boolean@)">
+            <summary>
+            Returns the <see cref="T:System.Double"/> value of an object member or an array element after <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/>
+            returned <see cref="F:Friflo.Json.Burst.JsonEvent.ValueNumber"/> and <see cref="F:Friflo.Json.Burst.Utf8JsonParser.isFloat"/> is true
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonParser.ValueAsFloat(System.Boolean@)">
+            <summary>
+            Returns the <see cref="T:System.Single"/> value of an object member or an array element after <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/>
+            returned <see cref="F:Friflo.Json.Burst.JsonEvent.ValueNumber"/> and <see cref="F:Friflo.Json.Burst.Utf8JsonParser.isFloat"/> is true
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonParser.ValueAsLong(System.Boolean@)">
+            <summary>
+            Returns the <see cref="T:System.Int64"/> value of an object member or an array element after <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/>
+            returned <see cref="F:Friflo.Json.Burst.JsonEvent.ValueNumber"/> and <see cref="F:Friflo.Json.Burst.Utf8JsonParser.isFloat"/> is false
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonParser.ValueAsInt(System.Boolean@)">
+            <summary>
+            Returns the <see cref="T:System.Int32"/> value of an object member or an array element after <see cref="M:Friflo.Json.Burst.Utf8JsonParser.NextEvent"/>
+            returned <see cref="F:Friflo.Json.Burst.JsonEvent.ValueNumber"/> and <see cref="F:Friflo.Json.Burst.Utf8JsonParser.isFloat"/> is false
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Burst.SkipInfo">
+             <summary>
+             Contains the count of JSON nodes (object members and array elements) skipped while parsing a JSON document.
+            
+             These count numbers are categorized by: arrays, booleans, floats, integers, nulls, objects and strings.
+             The count numbers are incremented while skipping via one of the <see cref="T:Friflo.Json.Burst.Utf8JsonParser"/> Skip...() methods like
+             <see cref="M:Friflo.Json.Burst.Utf8JsonParser.SkipTree"/> and <see cref="M:Friflo.Json.Burst.Utf8JsonParser.SkipEvent"/>. 
+             </summary>
+        </member>
+        <member name="T:Friflo.Json.Burst.Utf8JsonWriter">
+             <summary>
+             The JSON serializer used to create a JSON document by using a set of appender methods to add
+             JSON objects, object members (key/value pairs), arrays and array elements.<br/>
+            
+             Before using the serializer it need to be initialized with <see cref="M:Friflo.Json.Burst.Utf8JsonWriter.InitSerializer"/><br/>
+             
+             To add a JSON object use <see cref="M:Friflo.Json.Burst.Utf8JsonWriter.ObjectStart"/>.
+             Afterwards arbitrary object members can be added via the Member...() methods.<br/>
+             E.g by <c>MemberLng()</c> to add a key/value pair using an integer as value type
+             like { "count": 11 }<br/>
+             After all object members are serialized <see cref="M:Friflo.Json.Burst.Utf8JsonWriter.ObjectEnd"/> closes the previous started JSON object.<br/>
+            
+             To add a JSON array use <see cref="M:Friflo.Json.Burst.Utf8JsonWriter.ArrayStart(System.Boolean)"/>
+             Afterwards arbitrary array elements can be added via the Element...() methods.<br/>
+             E.g by <see cref="M:Friflo.Json.Burst.Utf8JsonWriter.ElementLng(System.Int64)"/> to add an element with an integer as value type
+             like [ 11 ]<br/>
+             After all array elements are serialized <see cref="M:Friflo.Json.Burst.Utf8JsonWriter.ArrayEnd"/> closes the previous started JSON array.<br/>
+            
+             After creating the JSON document by using the appender methods, the JSON document is available
+             via <exception cref="F:Friflo.Json.Burst.Utf8JsonWriter.json"></exception> 
+             </summary>
+        </member>
+        <member name="F:Friflo.Json.Burst.Utf8JsonWriter.json">
+            <summary>Contains the generated JSON document as <see cref="T:Friflo.Json.Burst.Bytes"/>.</summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.InitSerializer">
+            <summary>
+            Before starting serializing a JSON document the serializer need to be initialized with this method to
+            create internal buffers.
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.Dispose">
+            <summary>
+            Dispose all internal used buffers.
+            Only required when running with JSON_BURST within Unity. 
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.ObjectStart">
+            <summary>Start a JSON object for serialization</summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.ObjectEnd">
+            <summary>Finished a previous started JSON object for serialization</summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.MemberArrayStart(System.String,System.Boolean)">
+            <summary>Writes the key of key/value pair where the value will be an array</summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.MemberObjectStart(System.String)">
+            <summary>Writes the key of key/value pair where the value will be an object</summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.MemberStr(System.String,System.ReadOnlySpan{System.Byte})">
+            <summary>Writes a key/value pair where the value is a "string"</summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.MemberStr(System.String,System.String)">
+            <summary>
+            Writes a key/value pair where the value is a <see cref="T:System.String"/><br/>
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.MemberDbl(System.String,System.Double)">
+            <summary>Writes a key/value pair where the value is a <see cref="T:System.Double"/></summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.MemberLng(System.String,System.Int64)">
+            <summary>Writes a key/value pair where the value is a <see cref="T:System.Int64"/></summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.MemberBytes(System.ReadOnlySpan{System.Byte},Friflo.Json.Burst.Bytes@)">
+            <summary>Writes a key/value pair where the value is a "string"</summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.MemberBln(System.String,System.Boolean)">
+            <summary>Writes a key/value pair where the value is a <see cref="T:System.Boolean"/></summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.MemberNul(System.String)">
+            <summary>Writes a key/value pair where the value is null</summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.ElementStr(System.ReadOnlySpan{System.Byte})">
+            <summary>Write an array element of type "string"</summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.ElementStr(System.String)">
+            <summary>Write an array element of type <see cref="T:System.String"/></summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.ElementDbl(System.Double)">
+            <summary>Write an array element of type <see cref="T:System.Double"/></summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.ElementLng(System.Int64)">
+            <summary>Write an array element of type <see cref="T:System.Int64"/></summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.ElementBln(System.Boolean)">
+            <summary>Write an array element of type <see cref="T:System.Boolean"/></summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.ElementNul">
+            <summary>Writes null as array element</summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.MemberArrayStart(System.ReadOnlySpan{System.Byte})">
+            <summary>Writes the key of key/value pair where the value will be an array</summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.MemberObjectStart(System.ReadOnlySpan{System.Byte})">
+            <summary>Writes the key of key/value pair where the value will be an object</summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.MemberStr(System.ReadOnlySpan{System.Byte},System.ReadOnlySpan{System.Byte})">
+            <summary>Writes a key/value pair where the value is a "string"</summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.MemberStr(System.ReadOnlySpan{System.Byte},System.ReadOnlySpan{System.Char}@)">
+            <summary>
+            Writes a key/value pair where the value is a <see cref="T:System.String"/><br/>
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.MemberDbl(System.ReadOnlySpan{System.Byte},System.Double)">
+            <summary>Writes a key/value pair where the value is a <see cref="T:System.Double"/></summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.MemberLng(System.ReadOnlySpan{System.Byte},System.Int64)">
+            <summary>Writes a key/value pair where the value is a <see cref="T:System.Int64"/></summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.MemberBln(System.ReadOnlySpan{System.Byte},System.Boolean)">
+            <summary>Writes a key/value pair where the value is a <see cref="T:System.Boolean"/></summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.MemberNul(System.ReadOnlySpan{System.Byte})">
+            <summary>Writes a key/value pair where the value is null</summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.MemberArr(System.ReadOnlySpan{System.Byte},Friflo.Json.Burst.Bytes@)">
+            <summary>Writes a key/value pair where the value is JSON</summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.MemberGuid(System.ReadOnlySpan{System.Byte},System.Guid@)">
+            <summary>Writes a key/value pair where the value is Guid</summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utf8JsonWriter.MemberDate(System.ReadOnlySpan{System.Byte},System.DateTime@)">
+            <summary>Writes a key/value pair where the value is DateTime</summary>
+        </member>
+        <member name="T:Friflo.Json.Burst.IUtf8Buffer">
+            <summary>
+            Using <see cref="T:Friflo.Json.Burst.IUtf8Buffer"/> instead of <see cref="T:Friflo.Json.Burst.Utf8Buffer"/> enables using
+            instances of <see cref="T:Friflo.Json.Burst.Utf8Buffer"/> as private fields.
+            This preserve the immutable behavior when using these fields. 
+            </summary>
+        </member>
+        <member name="P:Friflo.Json.Burst.Utf8Buffer.Buf">
+            <summary>Important! Is internal by intention </summary>
+        </member>
+        <member name="T:Friflo.Json.Burst.Default">
+            Used to implement a default constructor for a struct's as C# cant have parameter less constructors for structs right now. 
+        </member>
+        <member name="M:Friflo.Json.Burst.DebugUtils.TrackAllocationObsolete(System.Object)">
+            <summary>
+            Only used to know previous calls of <see cref="M:Friflo.Json.Burst.DebugUtils.TrackAllocation(System.Object)"/><br/>
+            Tracking became obsolete since dropping support of JSON_BURST
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.DebugUtils.UntrackAllocationObsolete(System.Object)">
+            <summary>
+            Only used to know previous calls of <see cref="M:Friflo.Json.Burst.DebugUtils.UntrackAllocation(System.Object)"/><br/>
+            Tracking became obsolete since dropping support of JSON_BURST
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Burst.Utils.ShortStringUtils">
+            <summary>
+            Utility methods to support SSO - short string optimization<br/>
+            In case the UTF-8 representation of a string fits in 16 bytes
+            <b> 15 bytes + 1 length byte  </b>
+            a string is encode in <b>two long</b> values.<br/>
+            <br/>
+            <b>Two long</b> fields are used by the <c>struct JsonKey</c> internally.
+            </summary>
+            <remarks>
+            <b>BigEndian support (ARM)</b> currently untested
+            </remarks>
+        </member>
+        <member name="F:Friflo.Json.Burst.Utils.ShortStringUtils.MaxLength">
+            Maximum number of bytes that can be stored in a short string
+        </member>
+        <member name="F:Friflo.Json.Burst.Utils.ShortStringUtils.ByteCount">
+            number of bytes used to store a short string
+        </member>
+        <member name="F:Friflo.Json.Burst.Utils.ShortStringUtils.LengthPos">
+            position of the short string length byte.
+        </member>
+        <member name="F:Friflo.Json.Burst.Utils.ShortStringUtils.ShiftLength">
+            shift highest byte of lng2 7 bytes right to get byte count
+        </member>
+        <member name="F:Friflo.Json.Burst.Utils.ShortStringUtils.IsNull">
+            <summary>
+            <c>lng2</c> == <see cref="F:Friflo.Json.Burst.Utils.ShortStringUtils.IsNull"/>     => string is null
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Burst.Utils.ShortStringUtils.IsString">
+            <summary>
+            <c>lng2</c> == <see cref="F:Friflo.Json.Burst.Utils.ShortStringUtils.IsString"/>   => string is represented by a <see cref="T:System.String"/> instance
+            stored in <c>str</c><br/>
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utils.ShortStringUtils.StringToLongLong(System.String,System.String@,System.Int64@,System.Int64@)">
+            <summary>
+            If <paramref name="value"/> contains control characters => use string instance.<br/>
+            Same behavior as in <see cref="M:Friflo.Json.Burst.Utils.ShortStringUtils.BytesToLongLong(System.ReadOnlySpan{System.Byte}@,System.Int64@,System.Int64@)"/>
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utils.ShortStringUtils.BytesToLongLong(System.ReadOnlySpan{System.Byte}@,System.Int64@,System.Int64@)">
+            <summary>
+            If <paramref name="value"/> contains control characters => use string instance.<br/>
+            Same behavior as in <see cref="M:Friflo.Json.Burst.Utils.ShortStringUtils.StringToLongLong(System.String,System.String@,System.Int64@,System.Int64@)"/>
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utils.Utf8Utils.AppendUnicodeToBytes(Friflo.Json.Burst.Bytes@,System.Int32)">
+            NOTE!: Caller need to ensure dst buffer has sufficient capacity -> 4 bytes
+        </member>
+        <member name="M:Friflo.Json.Burst.Utils.ValueFormat.AppendFltOld(Friflo.Json.Burst.Bytes@,System.Single)">
+            <summary>replaced by <see cref="M:Friflo.Json.Burst.Utils.ValueFormat.AppendFlt(Friflo.Json.Burst.Bytes@,System.Single)"/></summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Utils.ValueFormat.AppendDblOld(Friflo.Json.Burst.Bytes@,System.Double)">
+            <summary>replaced by <see cref="M:Friflo.Json.Burst.Utils.ValueFormat.AppendDbl(Friflo.Json.Burst.Bytes@,System.Double)"/></summary>
+        </member>
+        <member name="M:Friflo.Json.Burst.Vector.VectorOps.Xor(System.Byte[],System.Int32,System.Byte[],System.Int32,System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Using a specific SIMD implementation like VectorOpsCLR gain performance boost by factor 3   
+            </summary>
+        </member>
+    </members>
+</doc>

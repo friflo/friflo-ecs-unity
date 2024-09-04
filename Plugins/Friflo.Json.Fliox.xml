@@ -1,0 +1,1538 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Friflo.Json.Fliox</name>
+    </assembly>
+    <members>
+        <member name="T:Friflo.Json.Fliox.JsonKey">
+            <summary>
+            A struct optimized to store integers, strings or GUID's used for entity identifiers.<br/>
+            E.g. <c>123, "123", "article" or "550e8400-e29b-11d4-a716-446655440000"</c><br/>
+            Encoding of integers can by numbers e.g. <c>123</c> or strings e.g. <c>"123"</c>.<br/>
+            <see cref="T:Friflo.Json.Fliox.JsonKey"/> is used within the library for processing <i>arbitrary</i> entity identifiers.<br/>
+            </summary>
+            <remarks>
+            The optimization goals are:<br/>
+            - avoid heap allocations for the types mentioned above.<br/>
+            - providing a performant lookup when used as key in a <see cref="T:System.Collections.Generic.Dictionary`2"/> or <see cref="T:System.Collections.Generic.HashSet`1"/><br/>
+            <br/>
+            Integers and GUID's are stored inside the struct. Strings with length less than 16 characters are also
+            stored inside the struct to avoid heap allocations.<br/>
+            A <see cref="T:Friflo.Json.Fliox.JsonKey"/> can also represents a <c>null</c> value. It can be tested using <see cref="M:Friflo.Json.Fliox.JsonKey.IsNull"/>.<br/>
+            Size of <see cref="T:Friflo.Json.Fliox.JsonKey"/> is 24 bytes<br/>
+            </remarks>
+            <seealso cref="T:Friflo.Json.Fliox.ShortString"/>
+        </member>
+        <member name="F:Friflo.Json.Fliox.JsonKey.keyObj">
+            Store either on of the objects below
+            <list type="bullet">
+                <item>           null               - a <i>null</i> reference</item>
+                <item><see cref="F:Friflo.Json.Fliox.JsonKey.LONG"/>            - an <see cref="T:System.Int64"/> value</item>
+                <item><see cref="F:Friflo.Json.Fliox.JsonKey.GUID"/>            - a <see cref="P:Friflo.Json.Fliox.JsonKey.Guid"/> value</item>
+                <item><see cref="F:Friflo.Json.Fliox.JsonKey.STRING_SHORT"/>    - a short string with length less than 16 bytes encoded a UTF-8</item>
+                <item><see cref="T:System.String"/> instance - an arbitrary string instance with length greater 15 bytes</item>
+            </list>
+        </member>
+        <member name="M:Friflo.Json.Fliox.JsonKey.#ctor(System.String)">
+            <summary>
+            Calling this constructor should be the last option as it may force a string creation. <br/>
+            Use alternative constructors if using a specific key type like <see cref="T:System.Int64"/> or <see cref="P:Friflo.Json.Fliox.JsonKey.Guid"/>.
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.JsonKey.AsString">
+            <summary>Calling this method causes string instantiation. To avoid this use its <i>AppendTo</i> methods if possible.</summary> 
+        </member>
+        <member name="F:Friflo.Json.Fliox.JsonKeyEncoding.LONG">
+            <summary>Get value with <see cref="M:Friflo.Json.Fliox.JsonKey.AsLong"/></summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.JsonKeyEncoding.STRING">
+            <summary>Get value with <see cref="M:Friflo.Json.Fliox.JsonKey.AsString"/></summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.JsonKeyEncoding.STRING_SHORT">
+            <summary>Get value with <see cref="M:Friflo.Json.Fliox.JsonKey.AsString"/> or <see cref="M:Friflo.Json.Fliox.JsonKey.ToBytes(Friflo.Json.Burst.Bytes@)"/></summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.JsonKeyEncoding.GUID">
+            <summary>Get value with <see cref="M:Friflo.Json.Fliox.JsonKey.AsGuid"/> or <see cref="M:Friflo.Json.Fliox.JsonKey.ToBytes(Friflo.Json.Burst.Bytes@)"/></summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.JsonTable.DateTime2Lng(System.DateTime)">
+            <summary>using instead of <see cref="M:System.DateTime.ToBinary"/> which degrade performance by x100</summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.JsonTable.Lng2DateTime(System.Int64)">
+            <summary>using instead of <see cref="M:System.DateTime.FromBinary(System.Int64)"/> which degrade performance by x100</summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.JsonTable.WriteJSON(System.ReadOnlySpan{System.Byte})">
+            <summary>
+            <b>Important!</b> <br/>
+            Passed value MUST be valid JSON. Otherwise invalid JSON will be generated downstream.
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.JsonTable.WriteCharJSON(System.ReadOnlySpan{System.Char})">
+            <summary>
+            <b>Important!</b> <br/>
+            Passed value MUST be valid JSON. Otherwise invalid JSON will be generated downstream.<br/>
+            <b>Note</b> Prefer using <see cref="M:Friflo.Json.Fliox.JsonTable.WriteJSON(System.ReadOnlySpan{System.Byte})"/> to avoid char[] -> UTF-8 conversion
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.JsonValue">
+            <summary>
+            <see cref="T:Friflo.Json.Fliox.JsonValue"/> instances contain <b>immutable</b> JSON values. <br/>
+            A JSON value can be an object, an array, a string, a number, a boolean or null. <br/>
+            To ensure immutability when creating a <see cref="T:Friflo.Json.Fliox.JsonValue"/> with <see cref="M:Friflo.Json.Fliox.JsonValue.#ctor(System.Byte[])"/>
+            the passed array must not be changed subsequently.
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.JsonValue.array">
+            not public to prevent potential side effects by application code mutating array elements
+        </member>
+        <member name="P:Friflo.Json.Fliox.JsonValue.Array">
+            <summary>Used internally where callers guarantee not mutating the array</summary>
+        </member>
+        <member name="P:Friflo.Json.Fliox.JsonValue.MutableArray">
+            <summary><b>Attention!</b> Callers must guarantee not mutating the array. Otherwise undefined behavior.</summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.JsonValue.AsMutableArraySegment">
+            <summary><b>Attention!</b> Callers must guarantee not mutating the array. Otherwise undefined behavior.</summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.JsonValue.AsByteArray">
+            <summary>Create a <see cref="T:System.Byte"/> array copy</summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.JsonValue.#ctor(Friflo.Json.Burst.Bytes@)">
+            <summary>
+            <b>Attention!</b> <see cref="T:Friflo.Json.Burst.Bytes"/> are commonly reused. <br/>
+            So the created <see cref="T:Friflo.Json.Fliox.JsonValue"/> need to be processed before the passed <paramref name="value"/> is reused.
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.JsonValue.#ctor(Friflo.Json.Fliox.JsonValue@)">
+            <summary>create a copy of the given <paramref name="value"/> </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.JsonValue.#ctor(System.String)">
+            <summary> Prefer using <see cref="M:Friflo.Json.Fliox.JsonValue.#ctor(System.Byte[])"/> </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.JsonValue.IsEqualReference(Friflo.Json.Fliox.JsonValue@)">
+            <summary>Use for testing only</summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.JsonValue.Copy(Friflo.Json.Fliox.JsonValue@,Friflo.Json.Fliox.JsonValue@)">
+            <summary>
+            Copy the given <paramref name="src"/> array to <paramref name="dst"/> <br/>
+            The <paramref name="dst"/> array is reused if big enough. Otherwise a new array is created<br/>
+            The <paramref name="src"/> array remains unchanged.
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.JsonValue.CopyTo(System.Byte[]@)">
+            <summary>
+            Copy the bytes of the <see cref="T:Friflo.Json.Fliox.JsonValue"/> to the given <paramref name="target"/> array.<br/>
+            A new array is created if the Length given target array is too small.
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.ShortString">
+            <summary>
+            A struct optimized to store strings with the focus on minimizing memory allocations<br/>
+            In contrast to <see cref="T:Friflo.Json.Fliox.JsonKey"/> it supports to check strings with <see cref="M:Friflo.Json.Fliox.ShortString.StartsWith(Friflo.Json.Fliox.ShortString@)"/><br/>
+            <br/>
+            It is intended to be used for <i>stable and descriptive names</i> like:
+            database, container, message, command, user, client and group names.<br/>
+            <see cref="M:Friflo.Json.Fliox.ShortString.StartsWith(Friflo.Json.Fliox.ShortString@)"/> is optimized to enable filtering names by using a prefix - e.g. <c>"std.*"</c>
+            used for authorization and subscriptions filters.
+            </summary>
+            <remarks>
+            The main optimization goal is to avoid string allocations.<br/>
+            Strings with length less than 16 characters are stored inside the struct to avoid heap allocations.<br/>
+            A <see cref="T:Friflo.Json.Fliox.ShortString"/> can also represents a <c>null</c> value. It can be tested using <see cref="M:Friflo.Json.Fliox.ShortString.IsNull"/>.<br/>
+            Size of <see cref="T:Friflo.Json.Fliox.ShortString"/> is 24 bytes<br/>
+            </remarks>
+            <seealso cref="T:Friflo.Json.Fliox.JsonKey"/>
+        </member>
+        <member name="F:Friflo.Json.Fliox.ShortString.str">
+            <summary>is not null in case a <see cref="T:Friflo.Json.Fliox.ShortString"/> is represented by a <see cref="T:System.String"/> instance.</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.ShortString.lng">
+            <summary>
+            bytes[0..7] - lower 8 UTF-8 bytes of a short string
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.ShortString.lng2">
+            <summary>
+            bytes[0..6] - higher 7 UTF-8 bytes of a short string.<br/>
+            byte [7]
+            <list type="bullet">
+              <item>0:          <see cref="T:Friflo.Json.Fliox.ShortString"/> represents a null string</item>
+              <item>greater 0:  short string length + 1</item>
+              <item>-128:       using a <see cref="T:System.String"/> instance</item>
+            </list>
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.ShortString.AsString">
+            <summary>Calling this method causes string instantiation. To avoid this use its <i>AppendTo</i> methods if possible.</summary> 
+        </member>
+        <member name="P:Friflo.Json.Fliox.Mapper.Diff.DiffNode.NodeKey">
+            <summary>Either a <see cref="T:Friflo.Json.Fliox.Mapper.Map.PropField"/> or the key of a <see cref="T:System.Collections.Generic.Dictionary`2"/></summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Mapper.Diff.JsonMergeWriter">
+            <summary>
+            Create the a JSON patch value by the given <see cref="T:Friflo.Json.Fliox.Mapper.Diff.DiffNode"/>. <br/>
+            The JSON patch result is intended to be merged (assigned) into a given object
+            by using <see cref="M:Friflo.Json.Fliox.Mapper.ObjectReader.ReadTo``1(Friflo.Json.Burst.Bytes,``0,System.Boolean)"/>
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Mapper.Diff.TypeNode.key">
+            <summary>Either a <see cref="T:Friflo.Json.Fliox.Mapper.Map.PropField"/> or the key of a <see cref="T:System.Collections.Generic.Dictionary`2"/></summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Gen.ClassMapperGen`1.Write(Friflo.Json.Fliox.Mapper.Map.Writer@,`0)">
+            <see cref="M:Friflo.Json.Fliox.Mapper.Map.Object.ClassMapper`1.Write(Friflo.Json.Fliox.Mapper.Map.Writer@,`0)"/>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Gen.ClassMapperGen`1.Read(Friflo.Json.Fliox.Mapper.Map.Reader@,`0,System.Boolean@)">
+            <see cref="M:Friflo.Json.Fliox.Mapper.Map.Object.ClassMapper`1.Read(Friflo.Json.Fliox.Mapper.Map.Reader@,`0,System.Boolean@)"/>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Gen.StructMapperGen`1.Write(Friflo.Json.Fliox.Mapper.Map.Writer@,`0)">
+            <see cref="M:Friflo.Json.Fliox.Mapper.Map.Object.ClassMapper`1.Write(Friflo.Json.Fliox.Mapper.Map.Writer@,`0)"/>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Gen.StructMapperGen`1.Read(Friflo.Json.Fliox.Mapper.Map.Reader@,`0,System.Boolean@)">
+            <see cref="M:Friflo.Json.Fliox.Mapper.Map.Object.ClassMapper`1.Read(Friflo.Json.Fliox.Mapper.Map.Reader@,`0,System.Boolean@)"/>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Gen.StructNullMapperGen`1.Write(Friflo.Json.Fliox.Mapper.Map.Writer@,System.Nullable{`0})">
+            <see cref="M:Friflo.Json.Fliox.Mapper.Map.Object.ClassMapper`1.Write(Friflo.Json.Fliox.Mapper.Map.Writer@,`0)"/>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Gen.StructNullMapperGen`1.Read(Friflo.Json.Fliox.Mapper.Map.Reader@,System.Nullable{`0},System.Boolean@)">
+            <see cref="M:Friflo.Json.Fliox.Mapper.Map.Object.ClassMapper`1.Read(Friflo.Json.Fliox.Mapper.Map.Reader@,`0,System.Boolean@)"/>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Map.Reader.ReadClass``1(Friflo.Json.Fliox.Mapper.Map.PropField,``0,System.Boolean@)">
+            <see cref="M:Friflo.Json.Fliox.Mapper.Map.Object.ClassMapper`1.Read(Friflo.Json.Fliox.Mapper.Map.Reader@,`0,System.Boolean@)"/> or any other <see cref="M:Friflo.Json.Fliox.Mapper.Map.TypeMapper`1.Read(Friflo.Json.Fliox.Mapper.Map.Reader@,`0,System.Boolean@)"/>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Map.Reader.ReadStruct``1(Friflo.Json.Fliox.Mapper.Map.PropField,``0@,System.Boolean@)">
+            <summary> <paramref name="value"/> is only used to infer type to avoid setting generic Type T explicit </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Map.Reader.ReadStructNull``1(Friflo.Json.Fliox.Mapper.Map.PropField,System.Nullable{``0}@,System.Boolean@)">
+            <summary> <paramref name="value"/> is only used to infer type to avoid setting generic Type T explicit </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Map.Reader.ReadJsonKey(Friflo.Json.Fliox.Mapper.Map.PropField,Friflo.Json.Fliox.JsonKey@,System.Boolean@)">
+            <see cref="M:Friflo.Json.Fliox.Mapper.Map.Val.JsonKeyMapper.Read(Friflo.Json.Fliox.Mapper.Map.Reader@,Friflo.Json.Fliox.JsonKey,System.Boolean@)"/>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Map.Reader.ReadShortString(Friflo.Json.Fliox.Mapper.Map.PropField,Friflo.Json.Fliox.ShortString@,System.Boolean@)">
+            <see cref="M:Friflo.Json.Fliox.Mapper.Map.Val.ShortStringMapper.Read(Friflo.Json.Fliox.Mapper.Map.Reader@,Friflo.Json.Fliox.ShortString,System.Boolean@)"/>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Map.Reader.ReadJsonValue(Friflo.Json.Fliox.Mapper.Map.PropField,System.Boolean@)">
+            <see cref="M:Friflo.Json.Fliox.Mapper.Map.Val.JsonValueMapper.Read(Friflo.Json.Fliox.Mapper.Map.Reader@,Friflo.Json.Fliox.JsonValue,System.Boolean@)"/>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Map.Reader.ReadEnum``1(Friflo.Json.Fliox.Mapper.Map.PropField,``0,System.Boolean@)">
+            <summary> <paramref name="value"/> is only used to infer type to avoid setting generic Type T explicit </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Map.Reader.ReadEnumNull``1(Friflo.Json.Fliox.Mapper.Map.PropField,System.Nullable{``0},System.Boolean@)">
+            <summary> <paramref name="value"/> is only used to infer type to avoid setting generic Type T explicit </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Mapper.Map.Reader.charBuf">
+            <summary>Can be used for custom mappers to create a temporary "string"
+            without creating a string on the heap.</summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Map.Reader.ValueParseError">
+            Method only exist to find places, where token (numbers) are parsed. E.g. in or double 
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Map.Writer.WriteJsonKey(Friflo.Json.Fliox.Mapper.Map.PropField,Friflo.Json.Fliox.JsonKey@,System.Boolean@)">
+            <see cref="M:Friflo.Json.Fliox.Mapper.Map.Val.JsonKeyMapper.Write(Friflo.Json.Fliox.Mapper.Map.Writer@,Friflo.Json.Fliox.JsonKey)"/>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Map.Writer.WriteShortString(Friflo.Json.Fliox.Mapper.Map.PropField,Friflo.Json.Fliox.ShortString@,System.Boolean@)">
+            <see cref="M:Friflo.Json.Fliox.Mapper.Map.Val.ShortStringMapper.Write(Friflo.Json.Fliox.Mapper.Map.Writer@,Friflo.Json.Fliox.ShortString)"/>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Map.Writer.WriteJsonValue(Friflo.Json.Fliox.Mapper.Map.PropField,Friflo.Json.Fliox.JsonValue@,System.Boolean@)">
+            <see cref="M:Friflo.Json.Fliox.Mapper.Map.Val.JsonValueMapper.Write(Friflo.Json.Fliox.Mapper.Map.Writer@,Friflo.Json.Fliox.JsonValue)"/>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Mapper.Map.Writer.typeCache">
+            <summary>Caches type meta data per thread and provide stats to the cache utilization</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Mapper.Map.Writer.format">
+            <summary>Can be used for custom mappers append a number while creating the JSON payload</summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Mapper.Map.AssemblyDocs">
+            <summary> Contains documentation of multiple assemblies </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Mapper.Map.AssemblyDoc">
+            <summary> Contains documentation of a single assembly </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Mapper.Map.AssemblyDocsHtml">
+            convert C# / .NET xml to HTML
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Map.AssemblyDocsHtml.AppendTrimLines(System.Text.StringBuilder,System.Xml.Linq.XText)">
+            <summary>Trim leading tabs and spaces. Normalize new lines</summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Mapper.Map.Object.DictionaryEnumerator`2">
+            <summary>
+            A enumerator for either a <see cref="T:System.Collections.Generic.Dictionary`2"/> or <see cref="T:System.Collections.Generic.IDictionary`2"/>
+            used to prevent heap allocation for an <see cref="T:System.Collections.Generic.IEnumerator`1"/> in case using a <see cref="T:System.Collections.Generic.Dictionary`2"/>
+            <br/>
+            It is used to enable using a single implementation for both types of Dictionaries
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Mapper.Map.PropField`1">
+            <summary>
+            May use generic type T in future to avoid casting object to T in <see cref="T:Friflo.Json.Fliox.Mapper.Map.Object.ClassMapper`1"/> implementations. <br/>
+            E.g. In calls <see cref="M:Friflo.Json.Fliox.Mapper.Map.Var.Member.GetVar(System.Object)"/> in <see cref="M:Friflo.Json.Fliox.Mapper.Map.Object.ClassMapper`1.Read(Friflo.Json.Fliox.Mapper.Map.Reader@,`0,System.Boolean@)"/>
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Map.TypeMapper`1.Copy(`0,`0@)">
+            <summary>
+            Derived <see cref="T:Friflo.Json.Fliox.Mapper.Map.TypeMapper`1"/>'s where TVal is a reference type must override this method.<br/>
+            The dst parameter can be default (null if TVal is a reference type). Two cases: <br/>
+            If TVal is reference type the called method create and assign an instance.<br/>
+            If TVal is a value type the called method ignore its value and assign src to dst.<br/>
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Map.TypeMapper`1.InitTypeMapper(Friflo.Json.Fliox.Mapper.TypeStore)">
+             <summary>
+             Need to be overridden, in case the derived <see cref="T:Friflo.Json.Fliox.Mapper.Map.TypeMapper`1"/> support <see cref="T:System.Type"/>'s
+             as fields or elements returning a <see cref="T:Friflo.Json.Fliox.Mapper.Map.TypeMapper`1"/>.<br/>
+             
+             In this case <see cref="M:Friflo.Json.Fliox.Mapper.Map.TypeMapper`1.InitTypeMapper(Friflo.Json.Fliox.Mapper.TypeStore)"/> is used to map a <see cref="T:System.Type"/> to a required
+             <see cref="T:Friflo.Json.Fliox.Mapper.Map.TypeMapper`1"/> by calling <see cref="M:Friflo.Json.Fliox.Mapper.TypeStore.GetTypeMapper(System.Type)"/> and storing the returned
+             reference also in the created <see cref="T:Friflo.Json.Fliox.Mapper.Map.TypeMapper`1"/> instance.<br/>
+            
+             This enables deferred initialization of TypeMapper to support circular type dependencies.
+             The goal is to support also type hierarchies without a 'directed acyclic graph' (DAG) of type dependencies.
+             </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Mapper.Map.DefaultTypeResolver.matcherList">
+            <summary>This matcher list is not used by the type resolver itself. Its only available for debugging purposes.</summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Map.Utils.HubCommandsUtils.GetHubMessageInfos(System.Type)">
+            <summary> type is FlioxClient or a derived type </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Mapper.Map.Utils.MessageInfo.paramType">
+            <summary>null: missing param    <br/>not null: message/command param: Type</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Mapper.Map.Utils.MessageInfo.resultType">
+            <summary>null: is message       <br/>not null: is command</summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Map.Val.DateTimeMapper.ToRFC_3339(System.DateTime@)">
+            <summary>uses same format as <see cref="M:Friflo.Json.Burst.Bytes.AppendDateTime(System.DateTime@,System.Span{System.Char})"/></summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Mapper.Map.Val.EnumMapperInternal`1">
+            <summary>
+            The mapping <see cref="F:Friflo.Json.Fliox.Mapper.Map.Val.EnumMapperInternal`1.enumToString"/> and <see cref="F:Friflo.Json.Fliox.Mapper.Map.Val.EnumMapperInternal`1.stringToEnum"/> is not bidirectional as this is the behaviour of C# enum types
+            <code>
+            public enum TestEnum {
+                Value1 = 11,
+                Value2 = 11, // duplicate constant value - C#/.NET maps these enum values to the first value using same constant
+            }
+            </code>
+            </summary>  
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Map.Val.EnumMapperInternal`1.CreateNames(Friflo.Json.Fliox.Mapper.Map.Val.EnumInfo{`0}[])">
+            Add enum values to buffer in a separate loop to use only a single <see cref="T:Friflo.Json.Burst.Utf8Buffer"/> buffer array
+        </member>
+        <member name="T:Friflo.Json.Fliox.Mapper.Map.Val.JsonEntityMapper">
+            <summary>
+            Basically same implementation as <see cref="T:Friflo.Json.Fliox.Mapper.Map.Val.JsonValueMapper"/>
+            Note: Keep both implementation in sync
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Mapper.Map.Val.JsonValueMapper">
+            <summary>
+            Basically same implementation as <see cref="T:Friflo.Json.Fliox.Mapper.Map.Val.JsonEntityMapper"/>
+            Note: Keep both implementation in sync
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Mapper.Map.VarIntern">
+            <summary>
+            Use as "union type" struct to store either a long, double or DateTime
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Mapper.Map.Var">
+            <summary>
+            <see cref="T:Friflo.Json.Fliox.Mapper.Map.Var"/> is used to prevent boxing of primitives types when: <br/>
+            - serializing primitive JSON values like: 123, "abc", true or false <br/>
+            - accessing primitive class fields or properties like: bool, byte, short, int, long, char, float and double. <br/> 
+            </summary>
+            Nest concrete VarType classes in Var to make all <see cref="T:Friflo.Json.Fliox.Mapper.Map.Var"/> fields private
+            Nest concrete VarType classes in Var to make all <see cref="T:Friflo.Json.Fliox.Mapper.Map.Var"/> fields private
+        </member>
+        <member name="T:Friflo.Json.Fliox.Mapper.Map.Var.Static">
+            <summary> using a static class prevents noise in form of 'Static members' for class instances in Debugger </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Map.VarType.FromType(System.Type)">
+            <summary> Method has many conditions. Cache returned VarType in case using frequently </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Mapper.DiffKind">
+            <summary> Defines how to process array (set) differences when creating a <see cref="T:Friflo.Json.Fliox.Mapper.Diff.DiffNode"/> tree </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Mapper.DiffKind.DiffElements">
+            <summary>Add all array (set) element differences to the <see cref="T:Friflo.Json.Fliox.Mapper.Diff.DiffNode"/> tree </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Mapper.DiffKind.DiffArrays">
+            <summary>Add only the first element difference of any array (set) to the <see cref="T:Friflo.Json.Fliox.Mapper.Diff.DiffNode"/> tree </summary>
+        </member>
+        <member name="P:Friflo.Json.Fliox.Mapper.ObjectReader.TypeCache">
+            <summary>Caches type meta data per thread and provide stats to the cache utilization</summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.ObjectReader.JsonBurstError">
+            <summary> <see cref="M:Friflo.Json.Burst.JsonError.Error(System.Int32)"/> don't call <see cref="F:Friflo.Json.Burst.JsonError.errorHandler"/> in
+            JSON_BURST compilation caused by absence of interfaces. </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.ObjectReader.ReadMapper``1(Friflo.Json.Fliox.Mapper.Map.TypeMapper{``0},Friflo.Json.Fliox.JsonValue@)">
+            Read() using micro optimization to avoid lookup of TypeMapper.
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.ObjectReader.ReadToMapper``1(Friflo.Json.Fliox.Mapper.Map.TypeMapper{``0},Friflo.Json.Fliox.JsonValue@,``0,System.Boolean)">
+            ReadTo() using micro optimization to avoid lookup of TypeMapper.
+        </member>
+        <member name="T:Friflo.Json.Fliox.Mapper.StoreConfig">
+            <summary>
+            An immutable configuration class for settings which are used by the lifetime of a <see cref="T:Friflo.Json.Fliox.Mapper.TypeStore"/>  
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Mapper.TypeStore">
+            <summary>
+            Thread safe store containing the required <see cref="T:System.Type"/> information for marshalling and unmarshalling.
+            Can be shared across threads by <see cref="T:Friflo.Json.Fliox.Mapper.Map.Reader"/> and <see cref="T:Friflo.Json.Fliox.Mapper.ObjectWriter"/> instances.
+            <br/>
+            The intention is to use only a single <see cref="T:Friflo.Json.Fliox.Mapper.TypeStore"/> instance within the whole application.
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Utils.DelegateUtils.CreateMemberGetter``2(System.Reflection.MemberInfo)">
+            -------------------------------- getter: field / property --------------------------------
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Utils.DelegateUtils.CreateMemberSetter``2(System.Reflection.MemberInfo)">
+            -------------------------------- setter: field / property --------------------------------  
+        </member>
+        <member name="M:Friflo.Json.Fliox.Mapper.Utils.DelegateUtils.CreateFieldSetterIL``2(System.Reflection.FieldInfo)">
+            <summary>
+            In contrast to expression based delegate IL based delegate is able to change <b>readonly</b> fields 
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Mapper.Utils.HashMapOpen`2">
+            <summary>
+            Requirement/feature: Allocation free hash map when using Get()
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Mapper.Utils.TypeCache">
+            <summary>
+            In contrast to <see cref="F:Friflo.Json.Fliox.Mapper.Utils.TypeCache.typeStore"/> this Cache is by intention not thread safe.
+            It is created within a <see cref="T:Friflo.Json.Fliox.Mapper.Map.Reader"/> and <see cref="T:Friflo.Json.Fliox.Mapper.ObjectWriter"/> to access type information
+            without locking if already cached.
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.MsgPack.MsgFormat">
+            <summary>
+            Spec: [msgpack/spec.md · msgpack/msgpack] https://github.com/msgpack/msgpack/blob/master/spec.md <br/>
+            Online converters:<br/>
+            hex     [msgpack-lite demo] https://kawanet.github.io/msgpack-lite/
+            dec     [MsgPack Converter | MsgPack to JSON Decoder and Encoder] https://ref45638.github.io/msgpack-converter/
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.MsgPack.MsgReaderState.RangeError">
+            <summary>
+            bit set in case of range errors for <see cref="F:Friflo.Json.Fliox.MsgPack.MsgReaderState.ExpectUint8"/>, ..., <see cref="F:Friflo.Json.Fliox.MsgPack.MsgReaderState.ExpectFloat64"/>
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.MsgPack.MsgReaderState.Mask">
+            used to mask subsequent states / errors
+        </member>
+        <member name="P:Friflo.Json.Fliox.MsgPack.MsgReader.KeyName">
+            <summary><see cref="F:Friflo.Json.Fliox.MsgPack.MsgReader.keyName"/> is set in <see cref="M:Friflo.Json.Fliox.MsgPack.MsgReader.ReadKey"/></summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.MsgPack.MsgReader.IsKeyEquals(System.Byte[])">
+            <summary>
+            Return true if the given <paramref name="key"/> is equal to <see cref="P:Friflo.Json.Fliox.MsgPack.MsgReader.KeyName"/>
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.MsgPack.MsgReader.ReadObject(System.Int32@)">
+            <summary> Expect call calling <see cref="M:Friflo.Json.Fliox.MsgPack.MsgReader.ReadKey"/> / <see cref="M:Friflo.Json.Fliox.MsgPack.MsgReader.SkipTree"/>in a subsequent loop</summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.MsgPack.MsgReader.ReadKey">
+            <summary>Is called subsequently after <see cref="M:Friflo.Json.Fliox.MsgPack.MsgReader.ReadObject(System.Int32@)"/></summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.MsgPack.MsgReader.SkipTree">
+            <summary>Is called subsequently after <see cref="M:Friflo.Json.Fliox.MsgPack.MsgReader.ReadObject(System.Int32@)"/> of unknown keys</summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.MsgPack.MsgPackUtils.HexToSpan(System.String)">
+            <summary> Convert hex to JSON with [msgpack-lite demo] https://kawanet.github.io/msgpack-lite/ </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.MsgPack.MsgPackUtils.HexNorm(System.String)">
+            <summary> Convert hex to JSON with [msgpack-lite demo] https://kawanet.github.io/msgpack-lite/ </summary>
+        </member>
+        <member name="P:Friflo.Json.Fliox.MsgPack.MsgWriter.DataHex">
+            <summary> Convert hex to JSON with [msgpack-lite demo] https://kawanet.github.io/msgpack-lite/ </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Pools.InstancePool`1">
+            <summary> Contain pooled instances of a specific type </summary>
+            <remarks> <see cref="T:Friflo.Json.Fliox.Pools.InstancePool`1"/> is not thread safe </remarks>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Pools.InstancePools">
+            <summary> A pool for class instances of reference types. </summary>
+            <remarks> <see cref="T:Friflo.Json.Fliox.Pools.InstancePools"/> is not thread safe </remarks>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Pools.PoolIntern`1">
+            <summary> Contain pooled instances of a specific type </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Pools.ReaderPool">
+            <summary>
+            A pool for class instances of all types defined in a <see cref="T:Friflo.Json.Fliox.Mapper.TypeStore"/>.<br/>
+            By assigning to <see cref="P:Friflo.Json.Fliox.Mapper.ObjectReader.ReaderPool"/> pooled instances are reused when deserializing JSON
+            with <see cref="T:Friflo.Json.Fliox.Mapper.ObjectReader"/> <b>Read()</b> methods.<br/>
+            The pool is not utilized when using the <see cref="T:Friflo.Json.Fliox.Mapper.ObjectReader"/> <b>ReadTo()</b> methods.
+            </summary>
+            <remarks> <see cref="T:Friflo.Json.Fliox.Pools.ReaderPool"/> is not thread safe </remarks>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Pools.ReaderPool.Reuse">
+            <summary>
+            Make pooled class instances available for reuse.<br/>
+            These instances were created when using the <see cref="T:Friflo.Json.Fliox.Pools.ReaderPool"/> in a previous <see cref="M:Friflo.Json.Fliox.Pools.ReaderPool.Reuse"/> cycle.
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.Definition.SchemaInfo">
+            <summary>
+            The <see cref="T:Friflo.Json.Fliox.Schema.Definition.SchemaInfo"/> contains meta data about a schema compatible to the fields <b>info</b> and <b>servers</b>
+            in the <a href="https://spec.openapis.org/oas/v3.0.0#openapi-object">OpenAPI Specification 3.0.0</a>
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Schema.Definition.SchemaInfo.#ctor(Friflo.Json.Fliox.Schema.OAS.OpenApi)">
+            <summary>Will be used for <see cref="T:Friflo.Json.Fliox.Schema.JSON.JSONSchema"/></summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.Definition.StandardTypes">
+            <summary>
+            Contain all standard types used by a <see cref="T:Friflo.Json.Fliox.Schema.Definition.TypeSchema"/>.
+            Unused standard types are null.
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.Definition.StandardTypeId">
+            <summary>
+            Same value ids as in Friflo.Json.Fliox.Hub.Host.SQL.ColumnType
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.Definition.TypeDef">
+            <summary>
+            Declare the shape of a specific type within a <see cref="T:Friflo.Json.Fliox.Schema.Definition.TypeSchema"/>.<br/>
+            <br/>
+            If <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.IsSchema"/> is true the type is the root type of a database schema.<br/>
+            In this each field in <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.Fields"/> represents a database container / table.  
+            </summary>
+            <remarks>
+            Note: Instances of <see cref="T:Friflo.Json.Fliox.Schema.Definition.TypeDef"/> including its fields are immutable.
+            </remarks>
+        </member>
+        <member name="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.Namespace">
+            <summary>
+            Namespace of a type. Depending on the generated language / schema is has the following meaning:
+            <list type="bullet">
+              <item>The <see cref="P:System.Type.Namespace"/> of a <see cref="T:System.Type"/>in C#</item>
+              <item>The module (file) in Typescript (Javascript)</item>
+              <item>The schema file in JSON Schema</item>
+              <item>The package folder in Java</item>
+              <item>The package declaration in Kotlin</item>
+            </list> 
+            </summary>
+        </member>
+        <member name="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.Path">
+            <summary>The path of the file containing the generated type. It is set by <see cref="T:Friflo.Json.Fliox.Schema.Language.Generator"/>.
+            <br></br>
+            In Typescript or JSON Schema a file can contain multiple types.
+            These types have the same file <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.Path"/> and the same <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.Namespace"/>.
+            <br></br>
+            In Java each type require its own file. The <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.Namespace"/> is the Java package name which can be
+            used by multiple types. But each type has its individual file <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.Path"/>.
+            </summary>
+        </member>
+        <member name="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.BaseType">
+            The class this type extends. In other words its base or parent class.  
+        </member>
+        <member name="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.IsClass">
+            If <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.IsClass"/> is true it has <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.Fields"/>
+        </member>
+        <member name="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.IsStruct">
+            <summary><see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.IsStruct"/> can be true only, if <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.IsClass"/> is true</summary>
+        </member>
+        <member name="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.KeyField">
+            <summary>Defines the field used as the primary key for a database container / table</summary>
+        </member>
+        <member name="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.Fields">
+            <summary>List of class fields if <see cref="T:Friflo.Json.Fliox.Schema.Definition.TypeDef"/> is a class. Otherwise null</summary>
+        </member>
+        <member name="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.Messages">
+            <summary>
+            List of messages exposed by a <c>DatabaseService</c>.<br/>
+            In contrast to <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.Commands"/> database service <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.Messages"/> have no return type.
+            </summary>
+        </member>
+        <member name="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.Commands">
+            <summary>List of commands exposed by a <c>DatabaseService</c></summary>
+        </member>
+        <member name="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.IsSchema">
+            <summary>
+            If true the <see cref="T:Friflo.Json.Fliox.Schema.Definition.TypeDef"/> is the root type of a database schema.<br/>
+            Each field in <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.Fields"/> defines a database container / table.<br/>
+            It also declare list of <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.Commands"/> and <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.Messages"/> exposed by a <c>DatabaseService</c>.
+            </summary>
+        </member>
+        <member name="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.UnionType">
+            <summary><see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.UnionType"/> is not null, if the type is as discriminated union.</summary>
+        </member>
+        <member name="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.Discriminant">
+            <summary><see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.Discriminant"/> is not null if the type is an element of a <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.UnionType"/>
+            Either both <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.Discriminant"/> and <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.Discriminator"/> are not null or both are null</summary>
+        </member>
+        <member name="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.IsEnum">
+            If <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.IsEnum"/> is true it has <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.EnumValues"/>
+        </member>
+        <member name="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.SchemaInfo">
+            <summary>meta data assigned to a schema compatible to <b>OpenAPI</b></summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Definition.TypeDef.fieldMap">
+            <summary>Map of class fields if <see cref="T:Friflo.Json.Fliox.Schema.Definition.TypeDef"/> is a class. Otherwise null</summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.Definition.FieldDef">
+            <summary>
+            The type definition of field (also named property) in a <see cref="T:Friflo.Json.Fliox.Schema.Definition.TypeDef"/>. E.g. a scalar type like boolean,
+            int, float, double, DateTime, Guid, BigInteger or string or a complex type like an array, a map (= Dictionary) or a class.
+            Fields also have a modifier to specify if a field is required or optional.
+            <br/>
+            Within a database schema every table / container has a primary key exposed by the <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.KeyField"/>. 
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Definition.FieldDef.isArray">
+            if <see cref="F:Friflo.Json.Fliox.Schema.Definition.FieldDef.isArray"/> is true <see cref="F:Friflo.Json.Fliox.Schema.Definition.FieldDef.type"/> contains the element type.
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Definition.FieldDef.isDictionary">
+            if <see cref="F:Friflo.Json.Fliox.Schema.Definition.FieldDef.isDictionary"/> is true <see cref="F:Friflo.Json.Fliox.Schema.Definition.FieldDef.type"/> contains the value type.
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Definition.FieldDef.isNullableElement">
+            See <see cref="M:Friflo.Json.Fliox.Schema.JSON.JsonTypeSchema.GetItemsFieldType(Friflo.Json.Fliox.Schema.JSON.FieldType,System.Boolean@)"/>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.Definition.MessageDef">
+            <summary>
+            <see cref="T:Friflo.Json.Fliox.Schema.Definition.MessageDef"/> is used to specify the interface of a command (= RPC) within a service.
+            The structure of a command consists of its <see cref="F:Friflo.Json.Fliox.Schema.Definition.MessageDef.name"/> its command <see cref="F:Friflo.Json.Fliox.Schema.Definition.MessageDef.param"/> type and its
+            command <see cref="F:Friflo.Json.Fliox.Schema.Definition.MessageDef.result"/> type. The command <see cref="F:Friflo.Json.Fliox.Schema.Definition.MessageDef.param"/> type specify the parameters and
+            when a command is executed it returns an object of the given <see cref="F:Friflo.Json.Fliox.Schema.Definition.MessageDef.result"/> type.
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Definition.MessageDef.param">
+            <summary>null: missing param    <br/>not null: message/command param: Type</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Definition.MessageDef.result">
+            <summary>null: is message       <br/>not null: is command</summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.Definition.TypeSchema">
+            <summary>
+            <see cref="T:Friflo.Json.Fliox.Schema.Definition.TypeSchema"/> is an abstraction of an entire type system / database schema used for code generation
+            and JSON payload validation like <b>JSON Schema</b>.
+            </summary>
+            
+            <remarks>
+            <br></br>
+            The <see cref="T:Friflo.Json.Fliox.Schema.Definition.TypeSchema"/> enables:
+            <list type="bullet">
+              <item>
+                Simplify implementation of code generators as its API is tailored towards retrieving type information by
+                simple getters using <see cref="T:Friflo.Json.Fliox.Schema.Definition.TypeDef"/>, <see cref="T:Friflo.Json.Fliox.Schema.Definition.FieldDef"/>, <see cref="T:Friflo.Json.Fliox.Schema.Definition.UnionType"/> and <see cref="T:Friflo.Json.Fliox.Schema.Definition.MessageDef"/>.
+              </item>
+              <item>
+                Write code generators independent from the specific used <see cref="T:Friflo.Json.Fliox.Schema.Definition.TypeSchema"/> like
+                <see cref="T:Friflo.Json.Fliox.Schema.JSON.JsonTypeSchema"/> or <see cref="T:Friflo.Json.Fliox.Schema.Native.NativeTypeSchema"/>. 
+              </item>
+              <item>
+                Enable implementation of <see cref="T:Friflo.Json.Fliox.Schema.Validation.TypeValidator"/> being independent from a specific
+                <see cref="T:Friflo.Json.Fliox.Schema.Definition.TypeSchema"/> like <see cref="T:Friflo.Json.Fliox.Schema.JSON.JsonTypeSchema"/> or <see cref="T:Friflo.Json.Fliox.Schema.Native.NativeTypeSchema"/>.
+              </item>
+              <item>
+                Resolving all type references by <see cref="T:Friflo.Json.Fliox.Schema.Definition.TypeDef"/>'s defined in a type system / schema in advance
+                to simplify type access and avoiding type lookups. E.g. references like <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.BaseType"/> or
+                <see cref="F:Friflo.Json.Fliox.Schema.Definition.FieldDef.type"/>. 
+              </item>
+            </list>
+            Note: <see cref="T:Friflo.Json.Fliox.Schema.Definition.TypeSchema"/> instances are immutable.
+            </remarks>
+        </member>
+        <member name="P:Friflo.Json.Fliox.Schema.Definition.TypeSchema.Types">
+            <summary>Set of all types defined in the type system / schema.</summary>
+        </member>
+        <member name="P:Friflo.Json.Fliox.Schema.Definition.TypeSchema.StandardTypes">
+            <summary>Set of all well known / standard types used in the type system / schema like integers,
+            floating point numbers, strings, booleans and timestamps</summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Schema.Definition.TypeSchema.MarkDerivedFields(System.Collections.Generic.ICollection{Friflo.Json.Fliox.Schema.Definition.TypeDef})">
+            <summary>
+            Must to be called after collecting all <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeSchema.Types"/> and their <see cref="P:Friflo.Json.Fliox.Schema.Definition.TypeDef.Fields"/>.
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Schema.Definition.TypeSchema.OrderTypes(Friflo.Json.Fliox.Schema.Definition.TypeDef,System.Collections.Generic.List{Friflo.Json.Fliox.Schema.Definition.TypeDef})">
+            <summary>
+            Create a list from the given  <paramref name="types"/> in the order:
+            <list>
+              <item>root type - schema</item>
+              <item>field types of root type - entity types</item>
+              <item>remaining types</item>
+            </list>
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Schema.Doc.TypeDoc.HtmlToDoc(System.String,System.String,System.String,System.String,System.String)">
+            <summary>Convert the given <see paramref="html"/> to source code documentation</summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Schema.Doc.TypeDoc.CreateMarkdownLines(System.Text.StringBuilder,System.String)">
+            <summary>Convert the given <see paramref="html"/> string to string[]. Each array item is a lines</summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Schema.Doc.TypeDoc.CreateHtmlElement(System.Text.StringBuilder,System.String)">
+            <summary>Convert the given <see paramref="html"/> string to an <see cref="T:System.Xml.Linq.XElement"/></summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Schema.Doc.TypeDoc.HasNewLine(System.Xml.Linq.XElement)">
+            <summary>Return true if text of the given <see paramref="element"/> contains a new line</summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.GraphQL.GqlSchema">
+            <summary>
+            <a href ="https://spec.graphql.org/June2018/#sec-Schema-Introspection">GraphQL specification - Schema Introspection</a>
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.JSON.JSONSchema">
+            <summary>
+            Compatible subset of the <a href="https://json-schema.org/specification.html">JSON Schema specification</a> with some extensions to
+            <list type="bullet">
+              <item>enable <b>code generation</b> for various languages</item>
+              <item>define <b>database schemas</b> declaring its <b>containers</b>, <b>commands</b> and <b>messages</b></item>
+            </list>
+            <br/>
+            Following extensions are added to the specification:
+            <list type="bullet">
+              <item><see cref="F:Friflo.Json.Fliox.Schema.JSON.JsonType.extends"/> - used to declare that a type definition extends the given one</item>
+              <item><see cref="F:Friflo.Json.Fliox.Schema.JSON.JsonType.discriminator"/> - declare the property name used as discriminator</item>
+              <item><see cref="F:Friflo.Json.Fliox.Schema.JSON.JsonType.isStruct"/> - type should be generated as struct - value type</item>
+              <item><see cref="F:Friflo.Json.Fliox.Schema.JSON.JsonType.isAbstract"/> - type definition is an abstract type</item>
+              <item><see cref="F:Friflo.Json.Fliox.Schema.JSON.JsonType.messages"/> - list of all database messages</item>
+              <item><see cref="F:Friflo.Json.Fliox.Schema.JSON.JsonType.commands"/> - list of all database commands</item>
+              <item><see cref="F:Friflo.Json.Fliox.Schema.JSON.JsonType.key"/> - name of the property used as primary key</item>
+              <item><see cref="F:Friflo.Json.Fliox.Schema.JSON.JsonType.descriptions"/> - a map storing the descriptions for enum values</item>
+              <item><see cref="F:Friflo.Json.Fliox.Schema.JSON.JSONSchema.openAPI"/> - add meta information to the schema conform to the OpenAPI specification</item>
+              <item><see cref="F:Friflo.Json.Fliox.Schema.JSON.FieldType.relation"/> - mark the property as a relation (aka reference or aka secondary key) to entities in the container named relation</item>
+            </list>
+            The restriction of <see cref="T:Friflo.Json.Fliox.Schema.JSON.JSONSchema"/> are:
+            <list type="bullet">
+              <item>
+                A schema property cannot nest anonymous types by "type": "object" with "properties": { ... }. <br/>
+                The property type needs to be a known type like "string", ... or a referenced <b>"$ref"</b> type.  <br/>
+                This restriction enables generation of code and types for languages without support of anonymous types. <br/>
+                It also enables concise error messages for validation errors when using <see cref="T:Friflo.Json.Fliox.Schema.Validation.TypeValidator"/>.
+              </item>
+              <item>
+                Note: Arrays and dictionaries are also valid schema properties. E.g. <br></br>
+                A valid array property like: <code>{ "type": ["array", "null"], "items": { "type": "string" } }</code><br></br>
+                A valid dictionary property like:  <code>{ "type": "object", "additionalProperties": { "type": "string" } }</code><br></br>
+                These element / value types needs to be a known type like "string", ... or a referenced <b>"$ref"</b> type.
+              </item>
+              <item>
+                On root level are only "$ref": "..." and "definitions": [...] allowed.
+              </item>
+            </list>
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.JSONSchema.rootRef">
+            <summary>reference to 'main' type definition in <see cref="F:Friflo.Json.Fliox.Schema.JSON.JSONSchema.definitions"/> to<br/>
+            enable schema urls without fragment suffix like: <c>#/definitions/SomeType</c> </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.JSONSchema.definitions">
+            <summary>map of type <see cref="F:Friflo.Json.Fliox.Schema.JSON.JSONSchema.definitions"/> contained by the JSON Schema.</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.JSONSchema.fileName">
+            <summary>file name is <see cref="F:Friflo.Json.Fliox.Schema.JSON.JSONSchema.name"/> + ".json".
+            E.g. <see cref="F:Friflo.Json.Fliox.Schema.JSON.JSONSchema.name"/>: Standard.json, <see cref="F:Friflo.Json.Fliox.Schema.JSON.JSONSchema.name"/>: "Standard</summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.JSON.JsonType">
+            <summary>
+            Use by <see cref="F:Friflo.Json.Fliox.Schema.JSON.JSONSchema.definitions"/> in <see cref="T:Friflo.Json.Fliox.Schema.JSON.JSONSchema"/> to declare a type definition
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.JsonType.extends">
+            <summary>reference to type definition which <see cref="F:Friflo.Json.Fliox.Schema.JSON.JsonType.extends"/> this type - <i>JSON Schema extension</i></summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.JsonType.discriminator">
+            <summary><see cref="F:Friflo.Json.Fliox.Schema.JSON.JsonType.discriminator"/> declares the name of the property used for polymorphic types - <i>JSON Schema extension</i></summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.JsonType.oneOf">
+            <summary>list of all specific types a polymorphic type can be. Is required if <see cref="F:Friflo.Json.Fliox.Schema.JSON.JsonType.discriminator"/> is assigned</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.JsonType.isAbstract">
+            <summary>declare type as an abstract type - <i>JSON Schema extension</i></summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.JsonType.type">
+            <summary>a basic JSON Schema type: 'null', 'object', 'string', 'boolean', 'number', 'integer' or 'array'</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.JsonType.key">
+            <summary>name of the property used as primary <see cref="F:Friflo.Json.Fliox.Schema.JSON.JsonType.key"/> for entities - <i>JSON Schema extension</i></summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.JsonType.properties">
+            <summary>map of all <see cref="F:Friflo.Json.Fliox.Schema.JSON.JsonType.properties"/> declared by the type definition:<br/>
+            - its keys are the property names<br/>
+            - its values are property types.<br/>
+            in case of a database schema the <see cref="F:Friflo.Json.Fliox.Schema.JSON.JsonType.properties"/> declare the database <b>containers</b></summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.JsonType.commands">
+            <summary>map of database <see cref="F:Friflo.Json.Fliox.Schema.JSON.JsonType.commands"/> - <i>JSON Schema extension</i><br/>
+            - its keys are the command names<br/>
+            - its values the command signatures</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.JsonType.messages">
+            <summary>map of database database <see cref="F:Friflo.Json.Fliox.Schema.JSON.JsonType.messages"/> - <i>JSON Schema extension</i><br/>
+            - its keys are the message names<br/>
+            - its values the message signatures</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.JsonType.isStruct">
+            <summary>true if type should be generated as a value type (struct) - <i>JSON Schema extension</i></summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.JsonType.required">
+            <summary>list of <see cref="F:Friflo.Json.Fliox.Schema.JSON.JsonType.required"/> properties</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.JsonType.additionalProperties">
+            <summary>true if <see cref="F:Friflo.Json.Fliox.Schema.JSON.JsonType.additionalProperties"/> are allowed</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.JsonType.enums">
+            <summary>all values that can be used for an enumeration type</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.JsonType.descriptions">
+            <summary>map of optional <see cref="F:Friflo.Json.Fliox.Schema.JSON.JsonType.descriptions"/> for <b>enum</b> values - <i>JSON Schema extension</i></summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.JsonType.description">
+            <summary>optional type description</summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.JSON.TypeRef">
+            <summary>
+            A reference to a type definition in a JSON Schema
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.TypeRef.reference">
+            <summary>reference to a type definition</summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.JSON.FieldType">
+            <summary>
+            Defines the type of property
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.FieldType.type">
+            <summary>a basic JSON Schema type: 'null', 'object', 'string', 'boolean', 'number', 'integer' or 'array'<br/>
+            or an array of these types used to declare <b>nullable</b> properties when using a basic JSON Schema type</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.FieldType.discriminant">
+            <summary>discriminant of a specific polymorphic type. Always an array with one string element</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.FieldType.items">
+            <summary>if set the property is an array - it declares the type of its <see cref="F:Friflo.Json.Fliox.Schema.JSON.FieldType.items"/></summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.FieldType.oneOf">
+            <summary>list of valid property types - used to declare <b>nullable</b> properties when using a <b>$ref</b> type</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.FieldType.minimum">
+            <summary><see cref="F:Friflo.Json.Fliox.Schema.JSON.FieldType.minimum"/> valid number</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.FieldType.maximum">
+            <summary><see cref="F:Friflo.Json.Fliox.Schema.JSON.FieldType.maximum"/> valid number</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.FieldType.pattern">
+            <summary>regular expression <see cref="F:Friflo.Json.Fliox.Schema.JSON.FieldType.pattern"/> to constrain string values</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.FieldType.format">
+            <summary>set to <b>'date-time'</b> if the property is a timestamp formatted as RFC 3339 + milliseconds</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.FieldType.reference">
+            <summary>reference to type definition used as property type</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.FieldType.additionalProperties">
+            <summary>if set the property is a map (Dictionary) using the key type <b>string</b> and the value type
+            specified by <see cref="F:Friflo.Json.Fliox.Schema.JSON.FieldType.additionalProperties"/></summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.FieldType.isAutoIncrement">
+            <summary>WIP</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.FieldType.relation">
+            <summary>if set the property is used as reference to entities in a database <b>container</b> named <see cref="F:Friflo.Json.Fliox.Schema.JSON.FieldType.relation"/> - <i>JSON Schema extension</i></summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.FieldType.description">
+            <summary>optional property description</summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.JSON.MessageType">
+            <summary>
+            Defines the signature of a command or message:<br/>
+            - the command / message parameter type <see cref="F:Friflo.Json.Fliox.Schema.JSON.MessageType.param"/><br/>
+            - the command <see cref="F:Friflo.Json.Fliox.Schema.JSON.MessageType.result"/> type
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.MessageType.param">
+            <summary>type of the command / message <see cref="F:Friflo.Json.Fliox.Schema.JSON.MessageType.param"/> - <i>JSON Schema extension</i></summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.MessageType.result">
+            <summary>type of the command <see cref="F:Friflo.Json.Fliox.Schema.JSON.MessageType.result"/> - <i>JSON Schema extension</i><br/>
+            messages return no <see cref="F:Friflo.Json.Fliox.Schema.JSON.MessageType.result"/></summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.JSON.MessageType.description">
+            <summary>optional command / message description</summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Schema.JSON.JsonStandardTypes.#ctor(System.Collections.Generic.Dictionary{System.String,Friflo.Json.Fliox.Schema.JSON.JsonTypeDef},Friflo.Json.Burst.IUtf8Buffer)">
+            <summary>
+            stand types are defined in <see cref="M:Friflo.Json.Fliox.Schema.Language.JsonSchemaGenerator.GetStandardTypes(Friflo.Json.Fliox.Schema.Definition.StandardTypes)"/> 
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.JSON.JsonTypeSchema">
+            <summary>
+            <see cref="T:Friflo.Json.Fliox.Schema.JSON.JsonTypeSchema"/> is used to create an immutable <see cref="T:Friflo.Json.Fliox.Schema.Definition.TypeSchema"/> instance
+            from a set of given <see cref="T:Friflo.Json.Fliox.Schema.JSON.JSONSchema"/>'s.<br/>
+            The utility method <see cref="M:Friflo.Json.Fliox.Schema.JSON.JsonTypeSchema.ReadSchemas(System.String)"/> can be used to read a set of
+            <see cref="T:Friflo.Json.Fliox.Schema.JSON.JSONSchema"/>'s as files in a folder.
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Schema.JSON.JsonTypeSchema.GetItemsFieldType(Friflo.Json.Fliox.Schema.JSON.FieldType,System.Boolean@)">
+            Supporting nullable (value type) array elements seems uh - however it is supported. Reasons against:
+            <list type="bullet">
+              <item>Application now have to check for null when accessing these types of arrays -> uh</item>
+              <item>Generated languages have typically no support for custom nullable values types.
+                    Common element types like int, byte, ... are typically supported - custom types not.</item>
+            </list>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Schema.JSON.JsonTypeSchema.ReadSchemas(System.String)">
+            <summary>Read a set of <see cref="T:Friflo.Json.Fliox.Schema.JSON.JSONSchema"/>'s stored as files in the given <paramref name="folder"/>.</summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.Language.CSharpGenerator">
+            <summary>
+            Generate C# from the given options. Examples available at:
+            <a href="https://github.com/friflo/Friflo.Json.Fliox/tree/main/Json.Tests/Common/UnitTest/Fliox/Schema">Schema unit tests</a>
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.Language.TypescriptGenerator">
+            <summary>
+            Generate Typescript from the given options. Examples available at:
+            <a href="https://github.com/friflo/Friflo.Json.Fliox/tree/main/Json.Tests/Common/UnitTest/Fliox/Schema">Schema unit tests</a>
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.Language.HtmlGenerator">
+            <summary>
+            Generate HTML from the given options. Examples available at:
+            <a href="https://github.com/friflo/Friflo.Json.Fliox/tree/main/Json.Tests/Common/UnitTest/Fliox/Schema">Schema unit tests</a>
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.Language.JsonSchemaGenerator">
+            <summary>
+            Generate JSON Schema from the given options. Examples available at:
+            <a href="https://github.com/friflo/Friflo.Json.Fliox/tree/main/Json.Tests/Common/UnitTest/Fliox/Schema">Schema unit tests</a>
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.Language.KotlinGenerator">
+            <summary>
+            Generate Kotlin from the given options. Examples available at:
+            <a href="https://github.com/friflo/Friflo.Json.Fliox/tree/main/Json.Tests/Common/UnitTest/Fliox/Schema">Schema unit tests</a>
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.Language.GraphQLGenerator">
+            <summary>
+            Generate GraphQL from the given options. Examples available at:
+            <a href="https://github.com/friflo/Friflo.Json.Fliox/tree/main/Json.Tests/Common/UnitTest/Fliox/Schema">Schema unit tests</a>
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.Language.Generator">
+            <summary>
+            A context class required to be used for all code / schema generators.<br></br>
+            Examples available at:
+            <a href="https://github.com/friflo/Friflo.Json.Fliox/tree/main/Json.Tests/Common/UnitTest/Fliox/Schema">Schema unit tests</a>
+            <br/>
+            
+            It contains the configuration for schema generation and the result after schema generation was executed.
+            The main configuration consists of the types to be generated and the file extension for generated files.
+            The result consists of the generated source <see cref="F:Friflo.Json.Fliox.Schema.Language.Generator.files"/>.
+            The utility method <see cref="M:Friflo.Json.Fliox.Schema.Language.Generator.WriteFiles(System.String,System.Boolean)"/> enables writing these files to a folder.
+            
+            <br></br>
+            In case of adding an additional code generator which should be part of this project the following
+            requirements must be met:
+            <list type="bullet">
+              <item>
+                In case a code generator is added to the library Friflo.Json.Fliox no dependencies to third party libraries
+                must be added. E.g. Serializer libraries to create a specific format (YAML, ...).
+                In case of third party dependencies the implementation requires a separate library. 
+                Schema / code generators are forced to use <see cref="T:System.Text.StringBuilder"/> like in <see cref="T:Friflo.Json.Fliox.Schema.Language.TypescriptGenerator"/>.
+              </item>
+              <item>
+                A code generator must not have any mutable state. All used properties must be readonly immutables.
+              </item>
+              <item>
+                Avoid virtual methods or interfaces to establish simplicity. 
+              </item>
+              <item>
+                As initial template <see cref="T:Friflo.Json.Fliox.Schema.Language.TypescriptGenerator"/> or <see cref="T:Friflo.Json.Fliox.Schema.Language.JsonSchemaGenerator"/> need to be used
+                to ensure the resulting generator can be compared to their originals with tools like WinMerge.
+                In particular the methods and their order:
+                <list type="bullet">
+                  <item>private constructor using <see cref="T:Friflo.Json.Fliox.Schema.Language.Generator"/> as parameter</item>
+                  <item><see cref="M:Friflo.Json.Fliox.Schema.Language.TypescriptGenerator.Generate(Friflo.Json.Fliox.Schema.Language.Generator)"/></item>
+                  <item><see cref="M:Friflo.Json.Fliox.Schema.Language.TypescriptGenerator.GetStandardTypes(Friflo.Json.Fliox.Schema.Definition.StandardTypes)"/></item>
+                  <item><see cref="M:Friflo.Json.Fliox.Schema.Language.TypescriptGenerator.EmitStandardType(Friflo.Json.Fliox.Schema.Definition.TypeDef,System.Text.StringBuilder)"/></item>
+                  <item><see cref="M:Friflo.Json.Fliox.Schema.Language.TypescriptGenerator.EmitType(Friflo.Json.Fliox.Schema.Definition.TypeDef,System.Text.StringBuilder)"/></item>
+                  <item><see cref="M:Friflo.Json.Fliox.Schema.Language.TypescriptGenerator.EmitClassType(Friflo.Json.Fliox.Schema.Definition.TypeDef,System.Text.StringBuilder)"/></item>
+                  <item><see cref="M:Friflo.Json.Fliox.Schema.Language.TypescriptGenerator.EmitMessages(System.String,System.Collections.Generic.IReadOnlyList{Friflo.Json.Fliox.Schema.Definition.MessageDef},Friflo.Json.Fliox.Schema.Utils.TypeContext,System.Text.StringBuilder)"/></item>
+                  <item><see cref="M:Friflo.Json.Fliox.Schema.Language.TypescriptGenerator.GetMessageArg(System.String,Friflo.Json.Fliox.Schema.Definition.FieldDef,Friflo.Json.Fliox.Schema.Utils.TypeContext)"/></item>
+                  <item><see cref="M:Friflo.Json.Fliox.Schema.Language.TypescriptGenerator.GetFieldType(Friflo.Json.Fliox.Schema.Definition.FieldDef,Friflo.Json.Fliox.Schema.Utils.TypeContext,System.Boolean)"/></item>
+                  <item><see cref="M:Friflo.Json.Fliox.Schema.Language.TypescriptGenerator.GetElementType(Friflo.Json.Fliox.Schema.Definition.FieldDef,Friflo.Json.Fliox.Schema.Utils.TypeContext)"/></item>
+                  <item><see cref="M:Friflo.Json.Fliox.Schema.Language.TypescriptGenerator.GetTypeName(Friflo.Json.Fliox.Schema.Definition.TypeDef,Friflo.Json.Fliox.Schema.Utils.TypeContext)"/></item>
+                  <item><see cref="M:Friflo.Json.Fliox.Schema.Language.TypescriptGenerator.GetDoc(System.String,System.String)"/></item>
+                  <item><see cref="M:Friflo.Json.Fliox.Schema.Language.TypescriptGenerator.EmitFileHeaders(System.Text.StringBuilder)"/></item>
+                </list>
+                Helper methods need to be added on the bottom.
+              </item>
+              <item>
+                The implementation should be small similar to <see cref="T:Friflo.Json.Fliox.Schema.Language.TypescriptGenerator"/> and <see cref="T:Friflo.Json.Fliox.Schema.Language.JsonSchemaGenerator"/>
+              </item>
+              <item>
+                The generated files (PocStore and Protocol) must be committed to a folder in 'assets~/Schema' and
+                a lean setup should be added ensuring the generated files are valid / compile successful.
+              </item>
+            </list>
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Language.Generator.types">
+            map of all <see cref="T:Friflo.Json.Fliox.Schema.Definition.TypeDef"/>'s required by the types provided for schema generation
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Language.Generator.fileEmits">
+            map of all generated files. key: file path  
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Language.Generator.files">
+            set of generated files and their source content. key: file name
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Language.Generator.separateTypes">
+            set of files where each type is generated into a separate file
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Language.Generator.emitTypes">
+            map of all emitted types and their emitted code 
+        </member>
+        <member name="M:Friflo.Json.Fliox.Schema.Language.Generator.#ctor(Friflo.Json.Fliox.Schema.Definition.TypeSchema,System.String,System.Collections.Generic.ICollection{Friflo.Json.Fliox.Schema.Language.Replace},System.Collections.Generic.ICollection{Friflo.Json.Fliox.Schema.Definition.TypeDef},System.Func{Friflo.Json.Fliox.Schema.Definition.TypeDef,System.String},System.String)">
+            <summary>
+            The generator context class used for specific code generators like <see cref="T:Friflo.Json.Fliox.Schema.Language.TypescriptGenerator"/>.
+            This class contains also general configuration for code generation. 
+            </summary>
+            <param name="schema">
+              The schema containing the types used to generate code. The library itself provide
+              <see cref="T:Friflo.Json.Fliox.Schema.Native.NativeTypeSchema"/> and <see cref="T:Friflo.Json.Fliox.Schema.JSON.JsonTypeSchema"/> as input schemas.
+            </param>
+            <param name="fileExtension">
+              file extension of the generated files
+            </param>
+            <param name="replacements">
+              Optional namespace prefixes used short the namespaces used in the generated files
+            </param>
+            <param name="separateTypes">
+              Optional list of types enabling each listed type is generated in its own file.
+              JSON Schema related tools often expect this schema structure like VSCode. See:
+              [JSON editing in Visual Studio Code] https://code.visualstudio.com/docs/languages/json#_mapping-in-the-user-settings
+            </param>
+            <param name="getPath">
+              An optional callback function used to customize the path of generated files.
+              E.g. in case of Java it would be: <code>type => $"{type.Namespace}.{type.Name}"</code> to generate
+              each type in its own file.
+            </param>
+            <param name="databaseUrl">database url for OpenAPI</param>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Schema.Language.Generator.WriteFiles(System.String,System.Boolean)">
+            <summary>
+            Write the generated file to the given folder and remove all others file with the used <see cref="F:Friflo.Json.Fliox.Schema.Language.Generator.fileExt"/>
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.Language.JsonTypeOptions">
+            <summary>
+            <see cref="T:Friflo.Json.Fliox.Schema.Language.JsonTypeOptions"/> contains the configuration used by schema and code generators using a
+            JSON Schema as input containing the types. These types are given via <see cref="F:Friflo.Json.Fliox.Schema.Language.JsonTypeOptions.schema"/> -
+            typically as <see cref="T:Friflo.Json.Fliox.Schema.JSON.JsonTypeSchema"/>.
+            <br></br>
+            All other properties are optional (can be null) and enable customization of the generated output: a schema or code.
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Language.JsonTypeOptions.fileExt">
+            <summary>the file extension of the generated files</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Language.JsonTypeOptions.replacements">
+            <summary>replace the namespaces / packages by the given <see cref="F:Friflo.Json.Fliox.Schema.Language.JsonTypeOptions.replacements"/></summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Language.JsonTypeOptions.separateTypes">
+            <summary>Types which need to be created in their own specific file can be listed in <see cref="F:Friflo.Json.Fliox.Schema.Language.JsonTypeOptions.separateTypes"/>.
+            This is typically a requirement of tools using JSON Schema <see cref="F:Friflo.Json.Fliox.Schema.Language.JsonTypeOptions.separateTypes"/></summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Language.JsonTypeOptions.getPath">
+            <summary><see cref="F:Friflo.Json.Fliox.Schema.Language.JsonTypeOptions.getPath"/> allow customization of generated file names</summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.Language.NativeTypeOptions">
+            <summary>
+            <see cref="T:Friflo.Json.Fliox.Schema.Language.NativeTypeOptions"/> contains the configuration used by schema and code generators using the
+            .NET type system.
+            <br/>
+            All other properties are optional (can be null) and enable customization of the generated output: a schema or code.
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Language.NativeTypeOptions.fileExt">
+            <summary>the file extension of the generated files</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Language.NativeTypeOptions.replacements">
+            <summary>replace the namespaces / packages by the given <see cref="F:Friflo.Json.Fliox.Schema.Language.NativeTypeOptions.replacements"/></summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Language.NativeTypeOptions.separateTypes">
+            <summary>Types which need to be created in their own specific file can be listed in <see cref="F:Friflo.Json.Fliox.Schema.Language.NativeTypeOptions.separateTypes"/>.
+            This is typically a requirement of tools using JSON Schema <see cref="F:Friflo.Json.Fliox.Schema.Language.NativeTypeOptions.separateTypes"/></summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Language.NativeTypeOptions.getPath">
+            <summary><see cref="F:Friflo.Json.Fliox.Schema.Language.NativeTypeOptions.getPath"/> allow customization of generated file names</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Language.Replace.namespace">
+            <summary>The namespace which need to be replaced</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Language.Replace.replacement">
+            <summary>The <see cref="F:Friflo.Json.Fliox.Schema.Language.Replace.replacement"/> (can be "") for the given <see cref="F:Friflo.Json.Fliox.Schema.Language.Replace.namespace"/>.</summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.Language.SchemaModel">
+            <summary>
+            <see cref="T:Friflo.Json.Fliox.Schema.Language.SchemaModel"/> instances are used to represent schemas in various programming languages
+            or schema formats like C#, Typescript, Kotlin, JSON Schema / OpenAPI and HTML.<br/>
+            <see cref="T:Friflo.Json.Fliox.Schema.Language.SchemaModel"/> instances are immutable.
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Schema.Language.SchemaModel.GenerateSchemaModels(System.Type,System.Collections.Generic.IEnumerable{Friflo.Json.Fliox.Schema.Language.CustomGenerator},System.String)">
+            <summary>
+            Generate schema models for the given <paramref name="rootType"/>. <br/>
+            The generated languages are the build-in supported languages: HTML, JSON Schema / OpenAPI, Typescript, C#, Kotlin
+            and languages that are generated via the passed <paramref name="generators"/>
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Schema.Language.SchemaModel.GenerateSchemaModels(Friflo.Json.Fliox.Schema.Definition.TypeSchema,System.Collections.Generic.ICollection{Friflo.Json.Fliox.Schema.Definition.TypeDef},System.Collections.Generic.IEnumerable{Friflo.Json.Fliox.Schema.Language.CustomGenerator},System.String)">
+            <summary>
+            Generate schema models for build-in supported languages: HTML, JSON Schema / OpenAPI, Typescript, C#, Kotlin
+            and languages that are generated via the passed <paramref name="generators"/>
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Schema.Language.SchemaModel.WriteFiles(System.String,System.Boolean)">
+            <summary>
+            Write the generated file to the given folder and remove all others file with the used <see cref="F:Friflo.Json.Fliox.Schema.Language.SchemaModel.fileExt"/>
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.Native.NativeTypeSchema">
+            <summary>
+            <see cref="T:Friflo.Json.Fliox.Schema.Native.NativeTypeSchema"/> is used to create an immutable <see cref="T:Friflo.Json.Fliox.Schema.Definition.TypeSchema"/> instance
+            from a C# .NET <see cref="T:System.Type"/> passed to its constructor <see cref="M:Friflo.Json.Fliox.Schema.Native.NativeTypeSchema.#ctor(System.Type)"/>
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Native.NativeTypeSchema.nativeRootType">
+            <summary>Contains only non <see cref="T:System.Nullable"/> Type's</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Native.NativeTypeSchema.Cache">
+            <summary> <see cref="T:Friflo.Json.Fliox.Schema.Native.NativeTypeSchema"/> instances are immutable so caching has no side effects </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.OAS.OpenApi">
+            <summary>
+            <a href="https://spec.openapis.org/oas/v3.0.0#openapi-object">OpenAPI Object specification</a>
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Utils.EmitFile.emitTypes">
+            contain all types of a file and their generated piece of code for each type
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Utils.EmitFile.imports">
+            contain all imports used by all types in a file
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Utils.EmitFile.header">
+            the generated code used as file header. Typically all imports (using statements)
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Utils.EmitFile.footer">
+            the generated code used as file footer. E.g. the closing brackets in case of JSON
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Utils.EmitFile.path">
+            The path of the file
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Utils.EmitType.path">
+            the mapper assigned to the type
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Utils.EmitType.content">
+            the piece of code to define the type
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Utils.EmitType.imports">
+            contain type imports directly used by this type / mapper. 
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Utils.TypeContext.type">
+            <summary>The <see cref="F:Friflo.Json.Fliox.Schema.Utils.TypeContext.type"/> the context was created for. Each type gets its own context.</summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Utils.TypeContext.sb">
+            should be used rarely. Use StringBuilder created in Generate() methods instead
+        </member>
+        <member name="M:Friflo.Json.Fliox.Schema.Validation.NativeValidationSet.AddRootType(System.Type)">
+            <summary>
+            <see cref="M:Friflo.Json.Fliox.Schema.Validation.NativeValidationSet.AddRootType(System.Type)"/> is used for optimization.<br/> 
+            It create <see cref="T:Friflo.Json.Fliox.Schema.Validation.ValidationTypeDef"/> instances for the given <paramref name="rootType"/> and all its dependent types.
+            <br/>
+            The <paramref name="rootType"/> is typically a class type extending FlioxClient - containing all
+            application specific types like entity, command and message types <br/>
+            Adding all <see cref="T:Friflo.Json.Fliox.Schema.Validation.ValidationTypeDef"/> instances at once enable reduced memory consumption and
+            high memory locality as only a single <see cref="T:Friflo.Json.Fliox.Schema.Validation.ValidationSet"/> is created for a single database schema.
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Schema.Validation.TypeValidator.DateTime">
+            <summary>ISO 8601 (RFC 3339) using optional fractions of a second. See <see cref="F:Friflo.Json.Burst.Bytes.DateTimeFormat"/></summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.Validation.ValidationSet">
+            <summary>
+            <see cref="T:Friflo.Json.Fliox.Schema.Validation.ValidationSet"/> provide the validation rules for <see cref="T:Friflo.Json.Fliox.Schema.Validation.TypeValidator"/> to validate
+            arbitrary JSON payloads by <see cref="M:Friflo.Json.Fliox.Schema.Validation.TypeValidator.ValidateObject(Friflo.Json.Fliox.JsonValue@,Friflo.Json.Fliox.Schema.Validation.ValidationType,System.String@)"/>.
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Schema.Validation.ValidationSet.#ctor(Friflo.Json.Fliox.Schema.Definition.TypeSchema)">
+            <summary>
+            Construct an immutable <see cref="T:Friflo.Json.Fliox.Schema.Validation.ValidationSet"/> from a given <see cref="T:Friflo.Json.Fliox.Schema.JSON.JsonTypeSchema"/> or a
+            <see cref="T:Friflo.Json.Fliox.Schema.Native.NativeTypeSchema"/>. The <see cref="T:Friflo.Json.Fliox.Schema.Validation.ValidationSet"/> is intended to be used by
+            <see cref="T:Friflo.Json.Fliox.Schema.Validation.TypeValidator"/> to validate JSON payloads by <see cref="M:Friflo.Json.Fliox.Schema.Validation.TypeValidator.ValidateObject(Friflo.Json.Fliox.JsonValue@,Friflo.Json.Fliox.Schema.Validation.ValidationType,System.String@)"/>. 
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Schema.Validation.ValidationTypeDef">
+            <summary>
+            Similar to <see cref="T:Friflo.Json.Fliox.Schema.Definition.TypeDef"/> but operates on byte arrays instead of strings to gain
+            performance.
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Transform.JsonPatch">
+            <summary>
+            Implement models of RFC 6902<br/>
+            <a href="https://tools.ietf.org/html/rfc6902">JavaScript Object Notation (JSON) Patch</a>
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Transform.JsonSelector.Select(Friflo.Json.Fliox.JsonValue@,Friflo.Json.Fliox.Transform.JsonSelect,System.Boolean)">
+            <summary>
+            
+            </summary>
+            <returns>null in case of an error - error message is available via <see cref="P:Friflo.Json.Fliox.Transform.JsonSelector.ErrorMessage"/>.</returns>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Transform.Operation.Parse(System.String,System.String@,Friflo.Json.Fliox.Transform.Query.Parser.QueryEnv)">
+            <summary>
+            Parse the given <see cref="T:Friflo.Json.Fliox.Transform.Operation"/> string and return an <see cref="T:Friflo.Json.Fliox.Transform.Operation"/>.
+            <returns>An <see cref="T:Friflo.Json.Fliox.Transform.Operation"/> is successful.
+            Otherwise it returns null and provide an descriptive <paramref name="error"/> message.</returns>
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Transform.Project.SelectionObject">
+            <summary>
+            Contain the <see cref="F:Friflo.Json.Fliox.Transform.Project.SelectionObject.name"/> for a GraphQL type.
+            The <see cref="F:Friflo.Json.Fliox.Transform.Project.SelectionObject.name"/> is returned for selection sets containing the field: __typename  
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Transform.Query.OperationContext.initArgs">
+            <summary>Used to ensure existence of lambda args used by <see cref="P:Friflo.Json.Fliox.Transform.Query.Ops.Field.name"/>'s</summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Transform.Query.OperationContext.Init(Friflo.Json.Fliox.Transform.Operation,System.String@)">
+            <summary>
+            Initialize <see cref="T:Friflo.Json.Fliox.Transform.Query.OperationContext"/> with given <see cref="F:Friflo.Json.Fliox.Transform.Query.OperationContext.op"/> and validate operation in one step.
+            Validation is not done in a separate step to ensure validation and initialization code and result are in sync.     
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Transform.Query.Ops.Negate">
+            <summary>
+            Returns the additive inverse number. Aka: opposite number, sign change or negation.<br/>
+            E.g. Negate from 5 is -5.<br/>
+            General: Negate(x) = -x
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Transform.Query.Ops.Length.Init(Friflo.Json.Fliox.Transform.Query.OperationContext)">
+            Could Extend <see cref="T:Friflo.Json.Fliox.Transform.Query.Ops.UnaryArithmeticOp"/> but Length() is not an arithmetic function  
+        </member>
+        <member name="T:Friflo.Json.Fliox.Transform.Query.Parser.QueryBuilder">
+            <summary>
+            Schematic processing overview
+            <code>
+             operation string          token[]           node tree            operation tree
+            ------------------> Lexer ---------> Parser -----------> Builder ---------------->
+            </code>
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Transform.Query.Parser.QueryBuilder.Parse(System.String,System.String@,Friflo.Json.Fliox.Transform.Query.Parser.QueryEnv)">
+            <summary>
+            namespace, class or method name may change. Use <see cref="M:Friflo.Json.Fliox.Transform.Operation.Parse(System.String,System.String@,Friflo.Json.Fliox.Transform.Query.Parser.QueryEnv)"/> instead.
+            <br/>
+            Traverse the node tree returned by <see cref="M:Friflo.Json.Fliox.Transform.Query.Parser.QueryParser.CreateTree(System.String,System.String@)"/> and create itself a tree of
+            <see cref="T:Friflo.Json.Fliox.Transform.Operation"/>'s.
+            <returns>An <see cref="T:Friflo.Json.Fliox.Transform.Operation"/> is successful.
+            Otherwise it returns null and provide an descriptive <paramref name="error"/> message.</returns>
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Transform.Query.Parser.QueryBuilder.GetArrowBody(Friflo.Json.Fliox.Transform.Query.Parser.QueryNode,System.Int32,Friflo.Json.Fliox.Transform.Query.Parser.QueryNode@,System.String@)">
+            Arrow operands are added exclusively by <see cref="M:Friflo.Json.Fliox.Transform.Query.Parser.QueryParser.HandleArrow(System.Collections.Generic.Stack{Friflo.Json.Fliox.Transform.Query.Parser.QueryNode},Friflo.Json.Fliox.Transform.Query.Parser.QueryNode,Friflo.Json.Fliox.Transform.Query.Parser.Token@,System.String@)"/> 
+        </member>
+        <member name="T:Friflo.Json.Fliox.Transform.Query.Parser.QueryLexer">
+            <summary>
+            <see cref="T:Friflo.Json.Fliox.Transform.Query.Parser.QueryLexer"/> iterate the characters of the given operation and create a list
+            of <see cref="T:Friflo.Json.Fliox.Transform.Query.Parser.Token"/>s.
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Transform.Query.Parser.QueryParser">
+            <summary>
+            <see cref="T:Friflo.Json.Fliox.Transform.Query.Parser.QueryParser"/> iterate the <see cref="T:Friflo.Json.Fliox.Transform.Query.Parser.Token"/>'s returned from <see cref="T:Friflo.Json.Fliox.Transform.Query.Parser.QueryLexer"/> and build
+            a tree of nodes with the root node returned by <see cref="M:Friflo.Json.Fliox.Transform.Query.Parser.QueryParser.CreateTree(System.String,System.String@)"/>.
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Transform.Query.Parser.QueryParser.HandleArrow(System.Collections.Generic.Stack{Friflo.Json.Fliox.Transform.Query.Parser.QueryNode},Friflo.Json.Fliox.Transform.Query.Parser.QueryNode,Friflo.Json.Fliox.Transform.Query.Parser.Token@,System.String@)">
+            Arrow tokens (=>) are added as <see cref="T:Friflo.Json.Fliox.Transform.Query.Parser.QueryNode"/> and accessed by <see cref="M:Friflo.Json.Fliox.Transform.Query.Parser.QueryBuilder.GetArrowBody(Friflo.Json.Fliox.Transform.Query.Parser.QueryNode,System.Int32,Friflo.Json.Fliox.Transform.Query.Parser.QueryNode@,System.String@)"/> 
+        </member>
+        <member name="M:Friflo.Json.Fliox.Transform.Query.Parser.QueryParser.PushNode(System.Collections.Generic.Stack{Friflo.Json.Fliox.Transform.Query.Parser.QueryNode},Friflo.Json.Fliox.Transform.Query.Parser.QueryNode)">
+            <summary>
+            Push <paramref name="newNode"/> to the stack.
+            In case <paramref name="newNode"/> is not unary it:
+            <list type="bullet">
+              <item> either replaces the last operand of an operation with lower precedence </item>
+              <item> or gets the new stack root and add the old root as first operand </item>
+            </list>
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Transform.Query.Parser.TokenType.BracketOpen">
+            ( and ) are used for functions or grouping operations
+        </member>
+        <member name="F:Friflo.Json.Fliox.Transform.Query.Parser.TokenType.BracketClose">
+            <see cref="F:Friflo.Json.Fliox.Transform.Query.Parser.TokenType.BracketClose"/> must not be used to create a <see cref="T:Friflo.Json.Fliox.Transform.Query.Parser.QueryNode"/> 
+        </member>
+        <member name="M:Friflo.Json.Fliox.Transform.Query.QueryConverter.GetMember(System.Linq.Expressions.MemberExpression,Friflo.Json.Fliox.Transform.Query.LambdaCx)">
+            <summary>
+            A path of chained fields (members) in C# starts at the root.    field_root.field_1. ... .field_leaf
+            In the LINQ expression tree its starts at the leaf (field_n).   field_leaf -> ... -> field_1 -> field_root
+             
+            The root field (member) decide which <see cref="T:Friflo.Json.Fliox.Transform.Operation"/> need to be created.
+            - If the root is a <see cref="T:System.Linq.Expressions.ParameterExpression"/> a <see cref="T:Friflo.Json.Fliox.Transform.Query.Ops.Field"/> is created.
+              (*) In this case the root is a lambda argument.
+            - If the root is a <see cref="T:System.Linq.Expressions.ConstantExpression"/> a <see cref="T:Friflo.Json.Fliox.Transform.Query.Ops.Literal"/> is created
+              from the value return by the leaf field.
+              (*) In this case the root references a variable declared outside the lambda expression.
+            - If the root is <c>null</c> <see cref="T:Friflo.Json.Fliox.Transform.Query.Ops.Literal"/> is created
+              from the value return by the leaf field.
+              (*) In this case the root references a static class field / property.
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Transform.Query.QueryConverter.GetLinqMemberOperation(System.Linq.Expressions.MemberExpression,System.Linq.Expressions.ParameterExpression,Friflo.Json.Fliox.Transform.Query.LambdaCx)">
+            <summary>
+            Return an operation if path ends with <c>.Length</c> or <c>.Count</c>
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Transform.Query.QueryConverter.GetBinaryConvertType(System.Linq.Expressions.BinaryExpression,System.Type@)">
+            <summary>
+            Required to determine the type of enums as LINQ convert enums to their underlying enum type like int32, ...  
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Transform.Scalar.GetFirstAstChild">
+            <summary>
+            Return the index of an <see cref="F:Friflo.Json.Fliox.Transform.ScalarType.Array"/> or <see cref="F:Friflo.Json.Fliox.Transform.ScalarType.Object"/> node in a <see cref="T:Friflo.Json.Fliox.Transform.Tree.JsonAst"/>.<br/>
+            To access node data use <see cref="P:Friflo.Json.Fliox.Transform.Tree.JsonAst.Nodes"/> or <see cref="M:Friflo.Json.Fliox.Transform.Tree.JsonAst.GetNodeValue(System.Int32)"/> 
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Transform.Scalar.AppendTo(System.Text.StringBuilder)">
+            Format as debug string - not as JSON
+        </member>
+        <member name="F:Friflo.Json.Fliox.Transform.ScalarSelector.nodeStack">
+            use <see cref="P:Friflo.Json.Fliox.Transform.ScalarSelector.NodeStack"/> while debugging
+        </member>
+        <member name="M:Friflo.Json.Fliox.Transform.ScalarSelector.Select(Friflo.Json.Fliox.JsonValue@,Friflo.Json.Fliox.Transform.ScalarSelect)">
+            <summary>
+            
+            </summary>
+            <returns>null in case of an error - error message is available via <see cref="P:Friflo.Json.Fliox.Transform.ScalarSelector.ErrorMessage"/>.</returns>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Transform.Select.PathNode`1">
+            <summary>
+            <see cref="T:Friflo.Json.Fliox.Transform.Select.PathNode`1"/>'s build a tree of nodes starting from <see cref="F:Friflo.Json.Fliox.Transform.Select.PathNodeTree`1.rootNode"/>.
+            The tree is build based on a given list of <see cref="T:System.String"/> paths.
+            
+            The route from <see cref="F:Friflo.Json.Fliox.Transform.Select.PathNodeTree`1.rootNode"/> to a leaf node represents a given <see cref="T:System.String"/> path.
+            For each given path a <see cref="T:Friflo.Json.Fliox.Transform.Select.PathSelector`1"/> is created. The <see cref="T:Friflo.Json.Fliox.Transform.Select.PathSelector`1"/> is then added
+            to <see cref="F:Friflo.Json.Fliox.Transform.Select.PathNode`1.selectors"/>.
+            
+            The root of the hierarchy is <see cref="F:Friflo.Json.Fliox.Transform.Select.PathNodeTree`1.rootNode"/>
+            A <see cref="T:Friflo.Json.Fliox.Transform.Select.PathSelector`1"/> is intended to store the result when reaching a node while traversing having an
+            associated <see cref="T:Friflo.Json.Fliox.Transform.Select.PathSelector`1"/> in <see cref="F:Friflo.Json.Fliox.Transform.Select.PathNode`1.selectors"/>.
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Transform.Select.PathNode`1.wildcardNode">
+            direct access to <see cref="F:Friflo.Json.Fliox.Transform.Select.PathNode`1.children"/>[*]
+        </member>
+        <member name="T:Friflo.Json.Fliox.Transform.Tree.JsonAst">
+            <summary>
+            Representation of a <see cref="T:Friflo.Json.Fliox.JsonValue"/> as a tree of <see cref="T:Friflo.Json.Fliox.Transform.Tree.JsonAstNode"/>'s.<br/>
+            The <see cref="T:Friflo.Json.Fliox.Transform.Tree.JsonAstNode"/>'s are enumerated and can be accessed by index using <see cref="P:Friflo.Json.Fliox.Transform.Tree.JsonAst.Nodes"/>. Root node has index [0]<br/>
+            Its <see cref="P:Friflo.Json.Fliox.Transform.Tree.JsonAst.Nodes"/> are reused to avoid heap allocations when creating trees from multiple JSON values.<br/>
+            <br/>
+            A <see cref="T:Friflo.Json.Fliox.Transform.Tree.JsonAst"/> enables iteration of JSON object members without reading the entire JSON value. <br/>
+            <br/>
+            Two <see cref="T:Friflo.Json.Fliox.Transform.Tree.JsonAst"/> instances are used by <see cref="T:Friflo.Json.Fliox.Transform.Tree.JsonMerger"/> for efficient patching
+            of a given JSON value with a second JSON patch value. 
+            </summary>
+            <remarks>
+            JSON example of the indices used at <see cref="P:Friflo.Json.Fliox.Transform.Tree.JsonAst.Nodes"/> 
+            <code>
+            {                   // 0 - root
+                "a": 1          // 1
+                "b": [          // 2
+                    null        // 3
+                    42          // 4
+                ],
+                "c": {          // 5
+                    "c1": true  // 6
+                }
+            } 
+            </code>
+            </remarks>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Transform.Tree.JsonAst.GetSpanString(Friflo.Json.Fliox.Transform.Tree.JsonAstSpan@)">
+            <summary> used to return <see cref="F:Friflo.Json.Fliox.Transform.Tree.JsonAstNode.key"/> and <see cref="F:Friflo.Json.Fliox.Transform.Tree.JsonAstNode.value"/> as string.</summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Transform.Tree.JsonAstIntern">
+            Is struct to enhance performance when traversing with <see cref="T:Friflo.Json.Fliox.Transform.Tree.JsonAstReader"/>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Transform.Tree.JsonAstNode">
+            <summary>
+            A node in a <see cref="T:Friflo.Json.Fliox.Transform.Tree.JsonAst"/> represents either a number, a string, a boolean, an object, an array or null.<br/>
+            The values of primitives like number, string and boolean ar available via <see cref="F:Friflo.Json.Fliox.Transform.Tree.JsonAstNode.value"/><br/>
+            The member name of object members is available via <see cref="F:Friflo.Json.Fliox.Transform.Tree.JsonAstNode.key"/><br/>
+            The fields <see cref="F:Friflo.Json.Fliox.Transform.Tree.JsonAstNode.child"/> and <see cref="F:Friflo.Json.Fliox.Transform.Tree.JsonAstNode.next"/> are indices to <see cref="P:Friflo.Json.Fliox.Transform.Tree.JsonAst.Nodes"/>
+            to access the first child or the next sibling node.
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Transform.Tree.JsonAstNode.child">
+            <summary>Is not -1 if node <see cref="F:Friflo.Json.Fliox.Transform.Tree.JsonAstNode.type"/> is <see cref="F:Friflo.Json.Burst.JsonEvent.ObjectStart"/> or <see cref="F:Friflo.Json.Burst.JsonEvent.ArrayStart"/></summary> 
+        </member>
+        <member name="F:Friflo.Json.Fliox.Transform.Tree.JsonAstNode.next">
+            <summary>Is not -1 if the node has a successor - an object member or an array element</summary> 
+        </member>
+        <member name="T:Friflo.Json.Fliox.Transform.Tree.JsonAstReader">
+            <summary>
+            Used to create a tree representation - a <see cref="T:Friflo.Json.Fliox.Transform.Tree.JsonAst"/> - for a given <see cref="T:Friflo.Json.Fliox.JsonValue"/>
+            by using <see cref="M:Friflo.Json.Fliox.Transform.Tree.JsonAstReader.CreateAst(Friflo.Json.Fliox.JsonValue@)"/>
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Transform.Tree.JsonAstReader.ast">
+            for debugging use <see cref="P:Friflo.Json.Fliox.Transform.Tree.JsonAstIntern.DebugNodes"/>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Transform.Tree.JsonAstSpan.start">
+            <summary>
+            if 0: string is null <br/>
+            >  0: is UTF-8 string with <see cref="F:Friflo.Json.Fliox.Transform.Tree.JsonAstSpan.start"/> in <see cref="P:Friflo.Json.Fliox.Transform.Tree.JsonAstIntern.Buf"/> 
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Transform.Tree.JsonAstWriter">
+            <summary>
+            Used to create a <see cref="T:Friflo.Json.Fliox.JsonValue"/> from the given <see cref="T:Friflo.Json.Fliox.Transform.Tree.JsonAst"/>
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Transform.Tree.JsonAstWriter.AssertBuffers">
+            <summary>Ensure <see cref="F:Friflo.Json.Burst.Bytes.buffer"/> is not modified at <see cref="M:Friflo.Json.Burst.Bytes.AppendBytes(Friflo.Json.Burst.Bytes@)"/></summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Transform.Tree.JsonMerger">
+            <summary>
+            Used to merge / patch two given <see cref="T:Friflo.Json.Fliox.JsonValue"/>'s efficiently. <br/>
+            Implements [RFC 7386: JSON Merge Patch] https://www.rfc-editor.org/rfc/rfc7386 <br/>
+            <br/>
+            First it creates two tree representations of both given <see cref="T:Friflo.Json.Fliox.JsonValue"/>'s <br/>
+            Both trees are then traversed in step to find their differences.
+            Based on their equalities and differences the resulting JSON value is created.<br/>
+            Reusing a <see cref="T:Friflo.Json.Fliox.Transform.Tree.JsonMerger"/> instance typically result in processing without any heap allocations.
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Utils.MemoryBuffer">
+            <summary>
+            Used to allocate byte arrays used within <see cref="T:Friflo.Json.Fliox.JsonValue"/>'s on the heap. <br/>
+            In general it tries to minimize the amount of array allocations.
+            </summary>
+            <remarks>
+            Strategy to minimize heap allocations and GC pressure.
+            <list type="bullet">
+              <item>don't allocate any array if the <see cref="T:Friflo.Json.Fliox.Utils.MemoryBuffer"/> is not used</item>
+              <item>avoid allocation of 'large heap object' <see cref="F:Friflo.Json.Fliox.Utils.MemoryBuffer.buffer"/>'s which required a GEN2 collection</item>
+              <item>avoid allocated <see cref="F:Friflo.Json.Fliox.Utils.MemoryBuffer.buffer"/>'s having too many unused remaining bytes => quadruple capacity</item>
+            </list>
+            </remarks>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Utils.MemoryBuffer.Add(Friflo.Json.Fliox.JsonValue@)">
+            <summary> add the <paramref name="value"/> to the <see cref="T:Friflo.Json.Fliox.Utils.MemoryBuffer"/> </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Utils.MemoryBuffer.Add(System.ReadOnlySpan{System.Byte}@)">
+            <summary> add the <paramref name="value"/> to the <see cref="T:Friflo.Json.Fliox.Utils.MemoryBuffer"/> </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Utils.MessageBufferQueue`1">
+            <summary>
+            A queue used to store <see cref="T:Friflo.Json.Fliox.JsonValue"/> messages using double buffering to avoid frequent allocations
+            of byte[] instances for each message.
+            </summary>
+            <remarks>
+            To avoid frequent byte[] allocations it utilizes two byte[] buffers.<br/>
+            1. One buffer is used to store the bytes of new messages. <br/>
+            2. The other buffer store the bytes of dequeued messages. <br/>
+            <b>Note</b>
+            Dequeued messages are valid until the next call of <see cref="M:Friflo.Json.Fliox.Utils.MessageBufferQueue`1.DequeMessageValues(System.Collections.Generic.List{Friflo.Json.Fliox.JsonValue})"/><br/>
+            The buffers are swapped when calling <see cref="M:Friflo.Json.Fliox.Utils.MessageBufferQueue`1.DequeMessageValues(System.Collections.Generic.List{Friflo.Json.Fliox.JsonValue})"/>.<br/>
+            <b>Note</b>
+            <see cref="T:Friflo.Json.Fliox.Utils.MessageBufferQueue`1"/> is not thread safe<br/>
+            <br/>
+            </remarks>
+            <typeparam name="TMeta">
+            Type of the meta data associated to each message.
+            Use <see cref="T:Friflo.Json.Fliox.Utils.VoidMeta"/> if no associated meta data is required
+            </typeparam>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Utils.MessageBufferQueue`1.AddHead(Friflo.Json.Fliox.JsonValue@,`0@)">
+            <summary>Add add copy of the given <paramref name="value"/> to the head of the queue</summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Utils.MessageBufferQueue`1.AddTail(Friflo.Json.Fliox.JsonValue@,`0@)">
+            <summary>Add add copy of the given <paramref name="value"/> to the tail of the queue</summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Utils.MessageBufferQueue`1.DequeMessageValues(System.Collections.Generic.List{Friflo.Json.Fliox.JsonValue})">
+            <summary>
+            Dequeue all queued message value<br/> 
+            The returned <paramref name="messages"/> are valid until the next <see cref="M:Friflo.Json.Fliox.Utils.MessageBufferQueue`1.DequeMessageValues(System.Collections.Generic.List{Friflo.Json.Fliox.JsonValue})"/> call.<br/>
+            Similar to <see cref="M:Friflo.Json.Fliox.Utils.MessageBufferQueue`1.DequeMessages(System.Collections.Generic.List{Friflo.Json.Fliox.Utils.MessageItem{`0}})"/> but return only <see cref="T:Friflo.Json.Fliox.JsonValue"/>'s
+            </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Utils.MessageBufferQueue`1.DequeMessages(System.Collections.Generic.List{Friflo.Json.Fliox.Utils.MessageItem{`0}})">
+            <summary>
+            Dequeue all queued messages <br/>
+            The returned <paramref name="messages"/> are valid until the next <see cref="M:Friflo.Json.Fliox.Utils.MessageBufferQueue`1.DequeMessages(System.Collections.Generic.List{Friflo.Json.Fliox.Utils.MessageItem{`0}})"/> call.<br/>
+            Similar to <see cref="M:Friflo.Json.Fliox.Utils.MessageBufferQueue`1.DequeMessageValues(System.Collections.Generic.List{Friflo.Json.Fliox.JsonValue})"/> but return <see cref="T:Friflo.Json.Fliox.JsonValue"/>'s and associated meta data.
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Utils.MessageBufferQueueAsync`1">
+            <summary>
+            Asynchronous version of <see cref="T:Friflo.Json.Fliox.Utils.MessageBufferQueue`1"/> used to support
+            awaiting new messages asynchronous with <see cref="M:Friflo.Json.Fliox.Utils.MessageBufferQueueAsync`1.DequeMessagesAsync(System.Collections.Generic.List{Friflo.Json.Fliox.Utils.MessageItem{`0}})"/> 
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.Utils.MessageBufferQueueSync`1">
+            <summary>
+            Synchronous version of <see cref="T:Friflo.Json.Fliox.Utils.MessageBufferQueue`1"/> used to support
+            waiting for new messages synchronous with <see cref="M:Friflo.Json.Fliox.Utils.MessageBufferQueueSync`1.DequeMessages(System.Collections.Generic.List{Friflo.Json.Fliox.Utils.MessageItem{`0}})"/> 
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.Utils.Pooled`1.instance">
+            <summary>
+            Provide a cached <see cref="F:Friflo.Json.Fliox.Utils.Pooled`1.instance"/> of Type <typeparamref name="T"/>.
+            Access to the <see cref="F:Friflo.Json.Fliox.Utils.Pooled`1.instance"/> is thread safe in the surrounding using scope.
+            Safe access to <see cref="F:Friflo.Json.Fliox.Utils.Pooled`1.instance"/> is intended by calling <see cref="M:Friflo.Json.Fliox.Utils.ObjectPool`1.Get"/> in a using scope.
+            E.g.:
+            <code>
+                using (var pooled = syncContext.pool.ObjectMapper.Get()) {
+                    ObjectMapper mapper  = pooled.instance;
+                    ...
+                }
+            </code>
+            <b>Note</b>: Caching the <see cref="F:Friflo.Json.Fliox.Utils.Pooled`1.instance"/> reference and accessing it after leaving the using scope
+            leads to a race condition and must not be done.
+            </summary>
+        </member>
+        <member name="P:Friflo.Json.Fliox.Utils.StreamBuffer.Remaining">
+            <summary> <see cref="P:Friflo.Json.Fliox.Utils.StreamBuffer.Capacity"/> - <see cref="P:Friflo.Json.Fliox.Utils.StreamBuffer.Position"/> </summary>
+        </member>
+        <member name="M:Friflo.Json.Fliox.Utils.StreamBuffer.SetCapacity(System.Int32)">
+            <summary>Set new capacity of the internal buffer returned with <see cref="M:Friflo.Json.Fliox.Utils.StreamBuffer.GetBuffer"/>.</summary>
+        </member>
+        <member name="T:System.Collections.Generic.ListOne`1">
+            <summary>
+            Container implementation aligned to <see cref="T:System.Collections.Generic.List`1"/> with focus on minimizing heap allocations<br/>
+            Features:<br/>
+            - Optimized for typical use-cases storing only a single item. No heap allocation if <see cref="P:System.Collections.Generic.ListOne`1.Count"/> = 1.<br/>
+            - Enable access to its items via <see cref="M:System.Collections.Generic.ListOne`1.GetSpan"/> or <see cref="M:System.Collections.Generic.ListOne`1.GetReadOnlySpan"/>
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.ListOne`1.GetEnumerator">
+            <summary>
+            <b>Performance!</b><br/>
+            Avoid iteration on the class instance directly. Instead Iterate on <see cref="M:System.Collections.Generic.ListOne`1.GetSpan"/> or <see cref="M:System.Collections.Generic.ListOne`1.GetReadOnlySpan"/>
+            <code>
+                var list = ListOne&lt;string&gt;();
+                foreach (var item in list) {}                       // avoid this
+                foreach (var item in list.GetReadOnlySpan()) {}     // use this
+            </code>
+            </summary>
+        </member>
+        <member name="T:System.Collections.Generic.ListOneDebugView`1">
+            <summary>Display <see cref="T:System.Collections.Generic.ListOne`1"/> items as list in Debugger</summary>
+        </member>
+    </members>
+</doc>

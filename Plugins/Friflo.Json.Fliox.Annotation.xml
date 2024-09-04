@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Friflo.Json.Fliox.Annotation</name>
+    </assembly>
+    <members>
+        <member name="T:Friflo.Json.Fliox.AutoIncrementAttribute">
+            <summary> Declare the attributed member as an auto increment field / property </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.RelationAttribute">
+            <summary> Specify that the attributed member is a reference (secondary key) to an entity in the given container </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.DatabaseCommandAttribute">
+            <summary> Set a custom command name for the attributed method </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.CommandHandlerAttribute">
+            <summary>
+            Declare the attributed method as a command handler.<br/>
+            Signature of command handler methods<br/>
+            <list type="bullet">
+              <item><i>synchronous</i>
+                <code>
+                [CommandHandler]
+                Result&lt;TResult&gt; MyCommand(Param&lt;TParam&gt; param, MessageContext context) { }
+                </code>
+              </item>
+              <item><i>asynchronous</i>
+                <code>
+                [CommandHandler]
+                async Task&lt;Result&lt;TResult&gt;&gt; MyCommand(Param&lt;TParam&gt; param, MessageContext context) { }
+                </code>
+              </item>
+            </list>
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.MessageHandlerAttribute">
+            <summary>
+            Declare the attributed method as a message handler.<br/>
+            Signature of message handler methods<br/>
+            <list type="bullet">
+              <item><i>synchronous</i>
+                <code>
+                [MessageHandler]
+                void MyMessage(Param&lt;TParam&gt; param, MessageContext context) { }
+                </code>
+              </item>
+              <item><i>asynchronous</i>
+                <code>
+                [MessageHandler]
+                async Task MyMessage(Param&lt;TParam&gt; param, MessageContext context) { }
+                </code>
+              </item>
+            </list>
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.TypeMapperAttribute">
+            <summary> Register a custom TypeMapper for the attributed class, interface or struct </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.DiscriminatorAttribute">
+            <summary> Declare the field / property <b>name</b> acting as discriminator for a polymorph class or interface</summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.PolymorphTypeAttribute">
+            <summary> Register a specific type for a polymorphic class identified with the given <see cref="P:Friflo.Json.Fliox.PolymorphTypeAttribute.Discriminant"/> </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.InstanceTypeAttribute">
+            <summary> Register a specific type for the attributed interface </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.NamingPolicyAttribute">
+            <summary>
+            Defines the naming policy used for class fields and properties.<br/>
+            It can be used to serialize field and property names as <see cref="F:Friflo.Json.Fliox.NamingPolicyType.CamelCase"/> while
+            using pascal case names in C# code.
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.NamingPolicyType">
+            <summary>
+            Naming policy used to serialize class fields and properties to JSON.<br/>  
+            </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.NamingPolicyType.Default">
+            <summary> Fields and properties serialized unchanged </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.NamingPolicyType.CamelCase">
+            <summary> Fields and properties serialized as <c>camelCase</c> </summary>
+        </member>
+        <member name="F:Friflo.Json.Fliox.NamingPolicyType.PascalCase">
+            <summary> Fields and properties serialized as <c>PascalCase</c> </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.SerializeAttribute">
+            <summary> Serialize the annotated private / internal member as a JSON field </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.IgnoreAttribute">
+            <summary> Ignore the annotated public member from JSON serialization </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.EnumValueAttribute">
+            <summary> Use a custom name for the annotated enum value for JSON serialization </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.OpenAPIAttribute">
+            <summary>
+            <a href="https://spec.openapis.org/oas/v3.0.0#openapi-object">OpenAPI Object specification</a>
+            </summary>
+        </member>
+        <member name="T:Friflo.Json.Fliox.OpenAPIServerAttribute">
+            <summary>
+            <a href="https://spec.openapis.org/oas/v3.0.0#server-object">OpenAPI Server Object</a>
+            </summary>
+        </member>
+    </members>
+</doc>

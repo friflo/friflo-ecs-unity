@@ -1,0 +1,54 @@
+
+
+Files under www~/ and Plugins/ folder are third party code under their own
+respective licenses:
+
+www~/explorer:
+
+    https://github.com/friflo/Friflo.Json.Fliox
+    Copyright (c) 2024 Ullrich Praetz. All rights reserved
+    AGPL-3.0 license
+
+www~/graphiql:
+
+    https://github.com/graphql/graphiql
+    Copyright (c) GraphQL Contributors
+    MIT license
+
+www~/mermaid:
+
+    https://github.com/mermaid-js/mermaid
+    Copyright (c) 2014 - 2022 Knut Sveidqvist
+    MIT license
+
+www~/monaco-editor:
+
+    https://github.com/microsoft/monaco-editor
+    Copyright (c) 2016 - present Microsoft Corporation
+    MIT license
+
+www~/swagger:
+
+    https://github.com/swagger-api/swagger-ui
+    Copyright 2020-2021 SmartBear Software Inc. - https://github.com/swagger-api/swagger-ui/blob/master/NOTICE
+    Apache-2.0 License
+
+
+
+Plugins/System.ComponentModel.Annotations.dll
+
+    https://www.nuget.org/packages/System.ComponentModel.Annotations
+    Copyright (c) .NET Foundation and Contributors
+    MIT license
+
+Plugins/System.Runtime.CompilerServices.Unsafe.dll
+
+    https://www.nuget.org/packages/System.Runtime.CompilerServices.Unsafe
+    Copyright (c) .NET Foundation and Contributors
+    MIT license
+
+Plugins/System.Threading.Channels.dll
+
+    https://www.nuget.org/packages/System.Threading.Channels
+    Copyright (c) .NET Foundation and Contributors
+    MIT license
