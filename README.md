@@ -1,6 +1,12 @@
-# friflo ECS for Unity
+<div align="center">
 
-PoC to add **friflo ECS** as Unity extension with full Editor integration.
+  [![friflo ECS Unity](Documentation~/images/friflo-ECS-Unity.svg)](https://github.com/friflo/friflo-ecs-unity)   ![splash](Documentation~/images/paint-splatter.svg)
+
+</div>
+
+# friflo ECS · Unity extension
+
+This Unity package add support for full Editor integration.
 
 
 # Setup
