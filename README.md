@@ -14,7 +14,7 @@
 
 # friflo ECS · Unity extension
 
-This Unity package add support for full Editor integration.
+Unity package with full Editor integration for [**Friflo.Engine.ECS**](https://github.com/friflo/Friflo.Engine.ECS).
 
 
 # Setup
