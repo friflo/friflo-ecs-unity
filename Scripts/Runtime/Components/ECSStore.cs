@@ -47,14 +47,15 @@ namespace Friflo.Engine.Unity {
 
         // private void OnEnable() { }
 
+#if UNITY_EDITOR
         private void Update()
         {
+            if (Application.isPlaying) return;
             var store = EntityStore;
-#if UNITY_EDITOR
             syncEditor ??= EditorTools.Instance.CreateSyncEditor(storeContext); 
             syncEditor.Sync();
-#endif
         }
+#endif
         
         internal StoreContext GetStoreContext() {
             if (storeContext != null) {
