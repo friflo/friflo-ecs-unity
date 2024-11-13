@@ -6,7 +6,7 @@ using Friflo.Engine.ECS;
 using Friflo.Engine.Unity;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Position = Friflo.Engine.ECS.Position;
+using Position = Friflo.Engine.Unity.Position;
 
 // ReSharper disable UseObjectOrCollectionInitializer
 // ReSharper disable once CheckNamespace
@@ -102,13 +102,13 @@ namespace Friflo.Engine.UnityEditor
             {
                 if (type == typeof(Position)) {
                     var position = new Position();
-                    position.value.Set(link.transform.position);
+                    position.value = link.transform.position;
                     entity.AddComponent(position);    
                     return;
                 }
                 if (type == typeof(Scale3)) {
                     var scale = new Scale3();
-                    scale.value.Set(link.transform.localScale);
+                    scale.value = link.transform.localScale;
                     entity.AddComponent(scale);    
                     return;
                 }

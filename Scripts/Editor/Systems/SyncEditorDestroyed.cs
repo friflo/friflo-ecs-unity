@@ -55,7 +55,7 @@ namespace Friflo.Engine.UnityEditor
                 link.transform.localPosition = new Vector3(pos.x, pos.y, pos.z);
                 return;
             } */
-            pos.value.Set(link.transform.localPosition);
+            pos.value = link.transform.localPosition;
         }
     }
 }

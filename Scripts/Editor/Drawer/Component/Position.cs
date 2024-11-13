@@ -2,6 +2,7 @@
 // See LICENSE file in the project root for full license information.
 
 using Friflo.Engine.ECS;
+using Friflo.Engine.Unity;
 using UnityEditor;
 using UnityEngine;
 
