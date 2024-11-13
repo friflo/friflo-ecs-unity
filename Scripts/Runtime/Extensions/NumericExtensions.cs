@@ -46,7 +46,7 @@ namespace Friflo.Engine.Unity
             var linkSpan        = links.Span;
             for (int n = 0; n < length; n++) {
                 var pos = positionSpan[n].value;
-                linkSpan[n].transform.localPosition = new UnityEngine.Vector3(pos.X, pos.Y, pos.Z);
+                linkSpan[n].transform.localPosition = new UnityEngine.Vector3(pos.x, pos.y, pos.z);
             }
         }
         
@@ -56,7 +56,7 @@ namespace Friflo.Engine.Unity
             var positionSpan    = positions.Span;
             var linkSpan        = links.Span;
             for (int n = 0; n < length; n++) {
-                positionSpan[n].value.Set(linkSpan[n].transform.localPosition);
+                positionSpan[n].value = linkSpan[n].transform.localPosition;
             }
         }
         #endregion
@@ -92,7 +92,7 @@ namespace Friflo.Engine.Unity
             var linkSpan    = links.Span;
             for (int n = 0; n < length; n++) {
                 var pos = scalesSpan[n].value;
-                linkSpan[n].transform.localScale = new UnityEngine.Vector3(pos.X, pos.Y, pos.Z);
+                linkSpan[n].transform.localScale = new UnityEngine.Vector3(pos.x, pos.y, pos.z);
             }
         }
         
@@ -102,7 +102,7 @@ namespace Friflo.Engine.Unity
             var scaleSpan   = scales.Span;
             var linkSpan    = links.Span;
             for (int n = 0; n < length; n++) {
-                scaleSpan[n].value.Set(linkSpan[n].transform.localScale);
+                scaleSpan[n].value = linkSpan[n].transform.localScale;
             }
         }
         #endregion
