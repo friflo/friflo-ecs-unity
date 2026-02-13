@@ -26,6 +26,7 @@ namespace Friflo.Engine.Unity {
         
     #region fields
         [SerializeField]public  GameObject      defaultObject;
+        [SerializeField]public  bool            enableORM;
         [NonSerialized] private SystemGroup     systemGroup;                 
         [NonSerialized] private StoreContext    storeContext;
 #if UNITY_EDITOR
@@ -60,7 +61,7 @@ namespace Friflo.Engine.Unity {
             if (storeContext != null) {
                 return storeContext;
             }
-            return storeContext = new StoreContext(this);
+            return storeContext = new StoreContext(this, enableORM);
         }
         
         // TODO check exception on domain reload. Call in Awake()?

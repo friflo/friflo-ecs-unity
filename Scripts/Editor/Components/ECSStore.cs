@@ -15,11 +15,13 @@ namespace Friflo.Engine.UnityEditor {
     {
     //  private SerializedProperty  storeName;
         private SerializedProperty  defaultObject;
+        private SerializedProperty  enableORM;
 
         private void OnEnable()
         {
             // storeName    = serializedObject.FindProperty(nameof(ECSStore.storeName));
             defaultObject   = serializedObject.FindProperty(nameof(ECSStore.defaultObject));
+            enableORM       = serializedObject.FindProperty(nameof(ECSStore.enableORM));
         }
         
         public override void OnInspectorGUI()
@@ -41,6 +43,7 @@ namespace Friflo.Engine.UnityEditor {
             EditorGUILayout.EndHorizontal();
             
             EditorGUILayout.ObjectField(defaultObject, typeof(GameObject));
+            EditorGUILayout.PropertyField(enableORM);
             if (more) {
                 var menu = new GenericMenu();
                 menu.AddItem(new GUIContent("Save ECS Store as JSON"), false, () => {

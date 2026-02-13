@@ -52,7 +52,7 @@ public class StoreContext
 
     
 #region init
-    public StoreContext(ECSStore ecsStore)
+    public StoreContext(ECSStore ecsStore, bool enableORM)
     {
         this.ecsStore   = ecsStore;
 
@@ -62,8 +62,11 @@ public class StoreContext
             Pretty          = false,
             ContainerType   = MemoryType.NonConcurrent
         };
-        var hub         = new FlioxHub(database);
-        storeClient     = new StoreClient(hub);
+        if (enableORM)
+        {
+            var hub         = new FlioxHub(database);
+            storeClient     = new StoreClient(hub);
+        }
     }
     
     internal void SetEntityStore(EntityStore store)
@@ -107,7 +110,8 @@ public class StoreContext
     private void SetStoreInternal(EntityStore store)
     {
         entityStore = store;
-        storeSync   = new StoreSync(store, storeClient);
+        if (storeClient != null)
+            storeSync   = new StoreSync(store, storeClient);
         
         store.OnComponentAdded    += OnComponentChanged;
         store.OnComponentRemoved  += OnComponentChanged;
@@ -127,7 +131,7 @@ public class StoreContext
             return;
         }
         var entity = changed.Entity;
-        storeSync.UpsertDataEntity(entity.Pid);
+        storeSync?.UpsertDataEntity(entity.Pid);
         PostSyncChanges();
 
         if (!entity.TryGetComponent<GameObjectLink>(out var link)) {
@@ -163,7 +167,7 @@ public class StoreContext
     private void OnTagsChanged(TagsChanged changed)
     {
         var entity = changed.Entity;
-        storeSync.UpsertDataEntity(entity.Pid);
+        storeSync?.UpsertDataEntity(entity.Pid);
         PostSyncChanges();
         
         if (!entity.TryGetComponent<GameObjectLink>(out var link)) {
@@ -186,7 +190,7 @@ public class StoreContext
     private void OnEntityCreate(EntityCreate create)
     {
         var entity = create.Entity;
-        storeSync.UpsertDataEntity(entity.Pid);
+        storeSync?.UpsertDataEntity(entity.Pid);
         PostSyncChanges();
         
         if (!entity.TryGetComponent(out GameObjectLink link)) {
@@ -278,7 +282,7 @@ public class StoreContext
     private void OnEntityDelete(EntityDelete delete)
     {
         var pid = delete.Entity.Pid;
-        storeSync.DeleteDataEntity(pid);
+        storeSync?.DeleteDataEntity(pid);
         PostSyncChanges();
         
         if (editorDeleted) {
@@ -354,14 +358,20 @@ public class StoreContext
         if (syncChangesPending) {
             return;
         }
-        ecsStore.Invoke(nameof(ECSStore.ExecutePendingChanges), 0);
-        syncChangesPending = true;
+        if (storeSync != null)
+        { 
+            ecsStore.Invoke(nameof(ECSStore.ExecutePendingChanges), 0);
+            syncChangesPending = true;
+        }
+        else
+            syncChangesPending = false;
     }
     
     internal async void ExecutePendingChanges() {
         syncChangesPending = false;
         // Debug.Log("ExecutePendingChanges");
-        await storeSync.SyncChangesAsync();   
+        if (storeSync != null)
+            await storeSync.SyncChangesAsync();   
     }
     #endregion
 }
