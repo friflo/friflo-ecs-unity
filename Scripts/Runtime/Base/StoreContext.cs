@@ -81,7 +81,8 @@ public class StoreContext
             var go          = GetOrCreateGameObject(entity, link.gameObject, out _);
             var ecsEntity   = go.GetComponent<ECSEntity>();
             ecsEntity.UpdateComponents(entity.Id);
-            ECSEntitySerializer.Instance.ReadLinkComponentsFromEntity(ecsEntity, entity);
+            if (!Application.isPlaying)
+                ECSEntitySerializer.Instance.ReadLinkComponentsFromEntity(ecsEntity, entity);
         }
         creatingGameObjects = false;
         
@@ -135,7 +136,8 @@ public class StoreContext
         }
         var componentType = new ComponentTypes(changed.ComponentType);
         UndoStore.RecordEntityChanges(link.EcsEntity, UndoStore.GetOperationName(changed), componentType, default);
-        ECSEntitySerializer.Instance.ReadLinkComponentsFromEntity(link.EcsEntity, entity);
+        if (!Application.isPlaying)
+            ECSEntitySerializer.Instance.ReadLinkComponentsFromEntity(link.EcsEntity, entity);
         
         switch (changed.Action)
         {
@@ -171,7 +173,8 @@ public class StoreContext
         }
         var changedTags = changed.ChangedTags;
         UndoStore.RecordEntityChanges(link.EcsEntity, UndoStore.GetOperationName(changed), default, changedTags);
-        ECSEntitySerializer.Instance.ReadLinkComponentsFromEntity(link.EcsEntity, entity);
+        if (!Application.isPlaying)
+            ECSEntitySerializer.Instance.ReadLinkComponentsFromEntity(link.EcsEntity, entity);
         
         if (changedTags.Has<Disabled>()) {
             link.gameObject.SetActive(changed.Entity.Enabled);
