@@ -59,7 +59,7 @@ public class ECSEntity : MonoBehaviour
     }
     
     // can return null
-    internal static ECSStore GetParentStore(Transform transform)
+    internal static ECSStore GetParentStore(UnityEngine.Transform transform)
     {
         do {
             var storeComponent = transform.GetComponent<ECSStore>();
